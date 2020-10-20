@@ -4,7 +4,7 @@ const app = express();
 const mongoose = require("mongoose");
 const userRouter = require("./routes/users");
 const login = require("./routes/auth");
-const product = require("./routes/products");
+const cart = require("./routes/cart");
 
 mongoose.connect(
   "mongodb+srv://guru-apr21:guru-apr21@contact-keeper.dawpv.mongodb.net/amazon?retryWrites=true&w=majority",
@@ -17,7 +17,7 @@ mongoose.connect(
 app.use(express.json());
 app.use("/api/register", userRouter);
 app.use("/api/login", login);
-app.use("/api/products", product);
+app.use("/api/cart", cart);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT);

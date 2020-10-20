@@ -6,6 +6,7 @@ const authenticateJwt = (req, res, next) => {
 
   if (authHeader) {
     const token = authHeader.split(" ")[1];
+    console.log(token);
     try {
       const decoded = jwt.verify(token, process.env.jwtPrivateKey);
       req.user = decoded;
