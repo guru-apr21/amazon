@@ -8,12 +8,21 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  role: { type: String, default: "Buyer" },
+  admin: { type: Boolean, default: false },
+});
+
+userSchema.set("toJSON", {
+  transform: (document, returnedObject) => {
+    returnedObject._id = returnedObject._id.toString();
+    delete returnedObject.passwordHash;
+    delete returnedObject.__v;
+    delete returnedObject.role;
+  },
 });
 
 userSchema.methods.genAuthToken = function () {
   return jwt.sign(
-    { _id: this._id, email: this.email },
+    { _id: this._id, email: this.email, admin: this.admin },
     process.env.jwtPrivateKey,
     {
       expiresIn: 100000,
