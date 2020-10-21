@@ -14,10 +14,11 @@ router.post("/", authenticateJwt, async (req, res) => {
   try {
     const { productId, quantity, title, price } = req.body;
     const { _id: userId } = req.user;
-    console.log(userId);
 
-    let cart = await Cart.findOne({ userId }).populate("User", User);
-    console.log(cart);
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).send("Invalid token");
+
+    let cart = await Cart.findOne({ userId }).populate("userId");
 
     if (cart) {
       const itemIndex = cart.products.findIndex(
@@ -45,6 +46,17 @@ router.post("/", authenticateJwt, async (req, res) => {
     console.log(err);
     res.send("Something went wrong!");
   }
+});
+
+router.delete("/:id", authenticateJwt, async (req, res) => {
+  const productId = req.params.id;
+  const userId = req.user._id;
+
+  let cart = await Cart.findOne({ userId }).populate("userId");
+  cart.products = cart.products.filter(
+    (p) => String(p.productId) !== productId
+  );
+  res.status(201).json(cart);
 });
 
 module.exports = router;
