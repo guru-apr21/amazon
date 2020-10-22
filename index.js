@@ -3,7 +3,6 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const userRouter = require("./routes/users");
-const login = require("./routes/auth");
 const cart = require("./routes/cart");
 const products = require("./routes/products");
 const categories = require("./routes/category");
@@ -17,8 +16,7 @@ mongoose.connect(
 );
 
 app.use(express.json());
-app.use("/api/register", userRouter);
-app.use("/api/login", login);
+app.use("/api/users", userRouter);
 app.use("/api/cart", cart);
 app.use("/api/products", products);
 app.use("/api/category", categories);

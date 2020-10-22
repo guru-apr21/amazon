@@ -7,9 +7,13 @@ const authenticateJwt = require("../middleware/auth");
 
 router.get("/", authenticateJwt, async (req, res) => {
   const cart = await Cart.findOne({ userId: req.user._id }).populate("userId");
+
+  if (!cart || cart.products.length < 1)
+    return res.status(400).json("Cart is empty");
   res.json(cart);
 });
 
+//Create cart if not available & update quantity of the product
 router.post("/", authenticateJwt, async (req, res) => {
   try {
     const { productId, quantity, title, price } = req.body;
@@ -24,7 +28,6 @@ router.post("/", authenticateJwt, async (req, res) => {
       const itemIndex = cart.products.findIndex(
         (p) => String(p.productId) === productId
       );
-      console.log("ItemIndex ", itemIndex);
 
       if (itemIndex > -1) {
         cart.products[itemIndex].quantity = quantity;
@@ -40,6 +43,7 @@ router.post("/", authenticateJwt, async (req, res) => {
         products: [{ productId, quantity, title, price }],
       });
       newCart = await newCart.save();
+      newCart.populate("userId").execPopulate();
       res.status(201).json(newCart);
     }
   } catch (err) {
@@ -48,7 +52,8 @@ router.post("/", authenticateJwt, async (req, res) => {
   }
 });
 
-router.delete("/:id", authenticateJwt, async (req, res) => {
+//remove a product from the cart
+router.put("/products/:id", authenticateJwt, async (req, res) => {
   const productId = req.params.id;
   const userId = req.user._id;
 
@@ -56,7 +61,20 @@ router.delete("/:id", authenticateJwt, async (req, res) => {
   cart.products = cart.products.filter(
     (p) => String(p.productId) !== productId
   );
+  cart = await cart.save();
+  if (cart.products.length < 1) return res.json("Cart is empty");
   res.status(201).json(cart);
+});
+
+//empty cart
+router.delete("/", authenticateJwt, async (req, res) => {
+  const { _id: userId } = req.user;
+  let cart = await Cart.findOne({ userId });
+  if (!cart) return res.status(400).json("Cart is empty");
+
+  cart.products = [];
+  cart = await cart.save();
+  res.json("Cart is emptied");
 });
 
 module.exports = router;
