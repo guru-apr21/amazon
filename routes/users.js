@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/Users");
-const bcrypt = require("bcrypt");
+const {
+  findUserByEmailId,
+  createUser,
+  comparePassword,
+} = require("../controllers/users");
 
 router.get("/", async (req, res) => {
   const users = await User.find();
@@ -9,34 +13,20 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const duplicate = await User.findOne({ email: req.body.email });
+  const duplicate = await findUserByEmailId(req.body.email);
   if (duplicate) return res.status(400).json({ error: "User already exists" });
 
-  const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(req.body.password, saltRounds);
-
-  const { firstName, lastName, email, admin } = req.body;
-
-  const user = new User({
-    firstName,
-    lastName,
-    email,
-    passwordHash,
-    admin,
-  });
-
-  await user.save();
-  const token = user.genAuthToken();
+  const token = await createUser(req.body);
   res.json({ token });
 });
 
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await findUserByEmailId(email);
   if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-  const match = await bcrypt.compare(password, user.passwordHash);
+  const match = await comparePassword(password, user.passwordHash);
   if (!match) return res.status(400).json({ error: "Invalid credentials" });
 
   const token = user.genAuthToken();

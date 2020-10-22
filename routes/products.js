@@ -4,38 +4,34 @@ const Product = require("../models/Products");
 const Category = require("../models/Category");
 const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
+const {
+  getProduct,
+  getProducts,
+  createNewProduct,
+  updateProduct,
+} = require("../controllers/product");
 
 router.get("/", async (req, res) => {
-  const products = await Product.find().populate("categoryId");
+  const products = await getProducts();
   res.json(products);
 });
 
 router.get("/:id", async (req, res) => {
-  const id = req.params.id;
-  const product = await Product.findById(id).populate("categoryId");
-  if (!product) return res.status(400).json({ error: "No such products" });
+  let product = await getProduct(req.params.id);
+  if (!product)
+    return res.status(400).json({ error: "No product with the given id" });
   res.json(product);
 });
 
 router.post("/", [authenticateJwt, roleAuth], async (req, res) => {
-  const { title, description, price, categoryId } = req.body;
-  let product = new Product({ title, description, price, categoryId });
-
-  let category = await Category.findById(categoryId);
-  if (!category) return res.status(400).json({ error: "No such category" });
-
-  const products = [...category.products, product._id]; //Array of productId's belonging to a category
-  category.products = products;
-  await category.save();
-
-  product = await product.save();
-  product = await product.populate("categoryId").execPopulate();
+  const { ...newProduct } = req.body;
+  let product = await createNewProduct(newProduct, res);
   res.status(201).json(product);
 });
 
 router.put("/:id", [authenticateJwt, roleAuth], async (req, res) => {
   const id = req.params.id;
-  const product = await Product.findByIdAndUpdate(id, req.body, { new: true });
+  const product = await updateProduct(id, req.body);
   if (!product)
     return res.status(400).json({ error: "No product with the given id" });
   res.json(product);
@@ -46,7 +42,6 @@ router.delete("/:id", [authenticateJwt, roleAuth], async (req, res) => {
   if (!admin) return res.status(403).json({ error: "Access denied" });
 
   const id = req.params.id;
-  console.log(id);
 
   const product = await Product.findByIdAndDelete(id).populate("categoryId");
   if (!product) return res.status(400).json({ error: "No such product" });
@@ -60,7 +55,7 @@ router.delete("/:id", [authenticateJwt, roleAuth], async (req, res) => {
     { new: true }
   );
   console.log(category);
-  res.status(201).json(product);
+  res.status(200).json(product);
 });
 
 module.exports = router;

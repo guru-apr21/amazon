@@ -1,12 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const Cart = require("../models/Cart");
 const User = require("../models/Users");
+const {
+  findCartByUserId,
+  createNewCart,
+  addProdToCart,
+} = require("../controllers/cart");
 
 const authenticateJwt = require("../middleware/auth");
 
 router.get("/", authenticateJwt, async (req, res) => {
-  const cart = await Cart.findOne({ userId: req.user._id }).populate("userId");
+  const cart = await findCartByUserId(req.user._id);
 
   if (!cart || cart.products.length < 1)
     return res.status(400).json("Cart is empty");
@@ -15,40 +19,20 @@ router.get("/", authenticateJwt, async (req, res) => {
 
 //Create cart if not available & update quantity of the product
 router.post("/", authenticateJwt, async (req, res) => {
-  try {
-    const { productId, quantity, title, price } = req.body;
-    const { _id: userId } = req.user;
+  const { ...product } = req.body;
+  const { _id: userId } = req.user;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(400).send("Invalid token");
+  const user = await User.findById(userId);
+  if (!user) return res.status(400).send("No user with the given id");
 
-    let cart = await Cart.findOne({ userId }).populate("userId");
+  let cart = await findCartByUserId(userId);
 
-    if (cart) {
-      const itemIndex = cart.products.findIndex(
-        (p) => String(p.productId) === productId
-      );
-
-      if (itemIndex > -1) {
-        cart.products[itemIndex].quantity = quantity;
-      } else {
-        cart.products.push({ productId, quantity, title, price });
-      }
-
-      cart = await cart.save();
-      res.status(201).json(cart);
-    } else {
-      let newCart = new Cart({
-        userId,
-        products: [{ productId, quantity, title, price }],
-      });
-      newCart = await newCart.save();
-      newCart.populate("userId").execPopulate();
-      res.status(201).json(newCart);
-    }
-  } catch (err) {
-    console.log(err);
-    res.send("Something went wrong!");
+  if (cart) {
+    cart = await addProdToCart(cart, product);
+    res.status(201).json(cart);
+  } else {
+    let newCart = await createNewCart(userId, [product]);
+    res.status(201).json(newCart);
   }
 });
 
@@ -57,7 +41,7 @@ router.put("/products/:id", authenticateJwt, async (req, res) => {
   const productId = req.params.id;
   const userId = req.user._id;
 
-  let cart = await Cart.findOne({ userId }).populate("userId");
+  let cart = await findCartByUserId(userId);
   cart.products = cart.products.filter(
     (p) => String(p.productId) !== productId
   );
@@ -69,7 +53,7 @@ router.put("/products/:id", authenticateJwt, async (req, res) => {
 //empty cart
 router.delete("/", authenticateJwt, async (req, res) => {
   const { _id: userId } = req.user;
-  let cart = await Cart.findOne({ userId });
+  let cart = await findCartByUserId(userId);
   if (!cart) return res.status(400).json("Cart is empty");
 
   cart.products = [];
