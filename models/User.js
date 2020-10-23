@@ -25,7 +25,7 @@ userSchema.methods.genAuthToken = function () {
     { _id: this._id, email: this.email, admin: this.admin },
     process.env.jwtPrivateKey,
     {
-      expiresIn: 100000,
+      expiresIn: "48h",
     }
   );
 };

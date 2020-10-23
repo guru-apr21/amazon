@@ -1,5 +1,5 @@
-const Product = require("../models/Products");
-const { findCategoryById } = require("../controllers/category");
+const Product = require("../models/Product");
+const { findCategoryById } = require("./categoryController");
 
 const getProduct = async (id) => {
   let product = await Product.findById(id).populate("categoryId");
@@ -11,14 +11,11 @@ const getProducts = async () => {
   return products;
 };
 
-const createNewProduct = async (newProduct, res) => {
+const createNewProduct = async (newProduct, category) => {
   let product = new Product(newProduct);
-
-  let category = await findCategoryById(newProduct.categoryId);
-  if (!category) return res.status(400).json({ error: "No such category" });
-
   const products = [...category.products, product._id]; //Array of productId's belonging to a category
   category.products = products;
+
   await category.save();
   product = await product.save();
   product = await product.populate("categoryId").execPopulate();
@@ -33,4 +30,15 @@ const updateProduct = async (id, product) => {
   return newProduct;
 };
 
-module.exports = { getProduct, getProducts, createNewProduct, updateProduct };
+const deleteProductById = async (id) => {
+  const product = await Product.findByIdAndDelete(id).populate("categoryId");
+  return product;
+};
+
+module.exports = {
+  getProduct,
+  getProducts,
+  createNewProduct,
+  updateProduct,
+  deleteProductById,
+};

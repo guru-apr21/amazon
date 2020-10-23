@@ -1,14 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/Users");
 const {
-  findUserByEmailId,
-  createUser,
-  comparePassword,
-} = require("../controllers/users");
+  userController: { findUserByEmailId, createUser, getAllUsers },
+} = require("../controllers/index");
+const { comparePassword } = require("../services/bcrypt");
 
 router.get("/", async (req, res) => {
-  const users = await User.find();
+  const users = await getAllUsers();
   res.json(users);
 });
 

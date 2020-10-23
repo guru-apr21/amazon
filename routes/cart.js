@@ -1,11 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/Users");
 const {
-  findCartByUserId,
-  createNewCart,
-  addProdToCart,
-} = require("../controllers/cart");
+  cartController: {
+    findCartByUserId,
+    createNewCart,
+    addProdToCart,
+    removeProductFromCart,
+    clearCart,
+  },
+  userController: { findUserById },
+} = require("../controllers/index");
 
 const authenticateJwt = require("../middleware/auth");
 
@@ -22,7 +26,7 @@ router.post("/", authenticateJwt, async (req, res) => {
   const { ...product } = req.body;
   const { _id: userId } = req.user;
 
-  const user = await User.findById(userId);
+  const user = await findUserById(userId);
   if (!user) return res.status(400).send("No user with the given id");
 
   let cart = await findCartByUserId(userId);
@@ -37,27 +41,23 @@ router.post("/", authenticateJwt, async (req, res) => {
 });
 
 //remove a product from the cart
-router.put("/products/:id", authenticateJwt, async (req, res) => {
-  const productId = req.params.id;
+router.put("/", authenticateJwt, async (req, res) => {
+  const productId = req.body.id;
   const userId = req.user._id;
 
   let cart = await findCartByUserId(userId);
-  cart.products = cart.products.filter(
-    (p) => String(p.productId) !== productId
-  );
-  cart = await cart.save();
+  cart = await removeProductFromCart(cart, productId);
   if (cart.products.length < 1) return res.json("Cart is empty");
   res.status(201).json(cart);
 });
 
 //empty cart
 router.delete("/", authenticateJwt, async (req, res) => {
-  const { _id: userId } = req.user;
+  const userId = req.user._id;
   let cart = await findCartByUserId(userId);
-  if (!cart) return res.status(400).json("Cart is empty");
-
-  cart.products = [];
-  cart = await cart.save();
+  if (!cart || cart.products.length < 1)
+    return res.status(400).json("Cart is empty already");
+  await clearCart(cart);
   res.json("Cart is emptied");
 });
 

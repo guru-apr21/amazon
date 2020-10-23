@@ -8,10 +8,12 @@ const shippingSchema = {
 };
 
 const orderItemSchema = {
-  title: { type: String, required: true },
   quantity: { type: Number, required: true },
-  price: { type: Number, required: true },
-  productId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
 };
 
 const orderSchema = new mongoose.Schema(
