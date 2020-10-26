@@ -2,8 +2,13 @@ const Cart = require("../models/Cart");
 const userController = require("./userController");
 
 const findCartByUserId = async (id) => {
-  const cart = await Cart.findOne({ userId: id }).populate("userId");
-  return cart;
+  try {
+    const cart = await Cart.findOne({ userId: id }).populate("userId");
+    return cart;
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -17,11 +22,16 @@ const findCartByUserId = async (id) => {
  * if available ,If not returns a message with 400 status
  */
 const getCartItems = async (req, res) => {
-  const cart = await findCartByUserId(req.user._id);
+  try {
+    const cart = await findCartByUserId(req.user._id);
 
-  if (!cart || cart.products.length < 1)
-    return res.status(200).json("Cart is empty");
-  res.json(cart);
+    if (!cart || cart.products.length < 1)
+      return res.status(200).json("Cart is empty");
+    res.json(cart);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -41,46 +51,51 @@ const getCartItems = async (req, res) => {
  * Or else create new cart
  */
 const createCart = async (req, res) => {
-  const { _id: userId } = req.user;
-  const { productId, quantity, title, price } = req.body;
+  try {
+    const { _id: userId } = req.user;
+    const { productId, quantity, title, price } = req.body;
 
-  const user = await userController.findUserById(userId);
-  if (!user) return res.status(404).json("User not found");
+    const user = await userController.findUserById(userId);
+    if (!user) return res.status(404).json("User not found");
 
-  let cart = await Cart.findOne({ userId }).populate("userId");
+    let cart = await Cart.findOne({ userId }).populate("userId");
 
-  if (cart) {
-    const itemIndex = cart.products.findIndex(
-      (p) => String(p.productId) === productId
-    );
+    if (cart) {
+      const itemIndex = cart.products.findIndex(
+        (p) => String(p.productId) === productId
+      );
 
-    /*
-     *Find the index of item in the products array
-     *
-     *If < 0 push product into products array
-     *If > 0 update the quantity
-     *
-     */
+      /*
+       *Find the index of item in the products array
+       *
+       *If < 0 push product into products array
+       *If > 0 update the quantity
+       *
+       */
 
-    if (itemIndex > -1) {
-      cart.products[itemIndex].quantity = quantity;
+      if (itemIndex > -1) {
+        cart.products[itemIndex].quantity = quantity;
+      } else {
+        cart.products.push({ productId, quantity, title, price });
+      }
+      cart = await cart.save();
+
+      res.status(201).json(cart);
     } else {
-      cart.products.push({ productId, quantity, title, price });
+      /**
+       * Create new cart if the user has no cart
+       */
+      cart = new Cart({
+        userId,
+        products: [{ productId, quantity, title, price }],
+      });
+      cart = await cart.save();
+      cart.populate("userId").execPopulate();
+      res.status(201).json(cart);
     }
-    cart = await cart.save();
-
-    res.status(201).json(cart);
-  } else {
-    /**
-     * Create new cart if the user has no cart
-     */
-    cart = new Cart({
-      userId,
-      products: [{ productId, quantity, title, price }],
-    });
-    cart = await cart.save();
-    cart.populate("userId").execPopulate();
-    res.status(201).json(cart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
   }
 };
 
@@ -98,17 +113,22 @@ const createCart = async (req, res) => {
  */
 
 const removeProdFromCart = async (req, res) => {
-  const productId = req.body.id;
-  const userId = req.user._id;
+  try {
+    const productId = req.body.id;
+    const userId = req.user._id;
 
-  let cart = await findCartByUserId(userId);
-  cart.products = cart.products.filter(
-    (p) => String(p.productId) !== productId
-  );
-  cart = await cart.save();
+    let cart = await findCartByUserId(userId);
+    cart.products = cart.products.filter(
+      (p) => String(p.productId) !== productId
+    );
+    cart = await cart.save();
 
-  if (cart.products.length < 1) return res.status(200).json("Cart is empty");
-  res.status(204).json(cart);
+    if (cart.products.length < 1) return res.status(200).json("Cart is empty");
+    res.status(204).json(cart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -120,15 +140,20 @@ const removeProdFromCart = async (req, res) => {
  * @returns success message
  */
 const emptyCart = async (req, res) => {
-  const userId = req.user._id;
-  let cart = await findCartByUserId(userId);
+  try {
+    const userId = req.user._id;
+    let cart = await findCartByUserId(userId);
 
-  if (!cart || cart.products.length < 1)
-    return res.status(400).json("Cart is empty already");
+    if (!cart || cart.products.length < 1)
+      return res.status(400).json("Cart is empty already");
 
-  cart.products = [];
-  cart = await cart.save();
-  res.json("Cart is emptied");
+    cart.products = [];
+    cart = await cart.save();
+    res.json("Cart is emptied");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 module.exports = {
