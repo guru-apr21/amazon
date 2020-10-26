@@ -6,17 +6,36 @@ const findCartByUserId = async (id) => {
   return cart;
 };
 
-/*Query the Cart collection from db by userId and returns 
-if available ,If not returns a message with 400 status*/
+/**
+ * @param {ObjectID} req.user._id
+ * @param {*} res
+ *
+ * @returns status 200 if cart is empty
+ * @returns cart object of given user
+ *
+ * Query the Cart collection from db by userId and returns
+ * if available ,If not returns a message with 400 status
+ */
 const getCartItems = async (req, res) => {
   const cart = await findCartByUserId(req.user._id);
 
   if (!cart || cart.products.length < 1)
-    return res.status(400).json("Cart is empty");
+    return res.status(200).json("Cart is empty");
   res.json(cart);
 };
 
 /**
+ *
+ * @param {ObjectId} req.user._id
+ * @param {ObjectId} req.body.productId
+ * @param {Number} req.body.quantity
+ * @param {String} req.body.title
+ * @param {Number} req.body.price
+ *
+ * @param {*} res
+ * @returns status 404 if user not found
+ * @returns status 201 with cart object
+ *
  * Query the db for cart with given userId
  * If found add items to the cart
  * Or else create new cart
@@ -26,7 +45,7 @@ const createCart = async (req, res) => {
   const { productId, quantity, title, price } = req.body;
 
   const user = await userController.findUserById(userId);
-  if (!user) return res.status(400).send("No user with the given id");
+  if (!user) return res.status(404).json("User not found");
 
   let cart = await Cart.findOne({ userId }).populate("userId");
 
@@ -67,10 +86,17 @@ const createCart = async (req, res) => {
 
 /**
  *
- * Query the db for cart with given userID
- * Remove the item from products array
+ * @param {ObjectID} req.user._id
+ * @param {ObjectID} req.body.id
+ * @param {*} res
  *
+ * @returns status 200 if cart is empty
+ * @returns status 204 with updated cart object
+ *
+ * Query the db for cart with given userID
+ * Remove a productid from cart's products array
  */
+
 const removeProdFromCart = async (req, res) => {
   const productId = req.body.id;
   const userId = req.user._id;
@@ -81,14 +107,17 @@ const removeProdFromCart = async (req, res) => {
   );
   cart = await cart.save();
 
-  if (cart.products.length < 1) return res.json("Cart is empty");
-  res.status(201).json(cart);
+  if (cart.products.length < 1) return res.status(200).json("Cart is empty");
+  res.status(204).json(cart);
 };
 
 /**
  *
- * Remove all items from the products array
+ * @param {ObjectID} req.user._id
+ * @param {*} res
  *
+ * @returns status 400 if cart is empty already
+ * @returns success message
  */
 const emptyCart = async (req, res) => {
   const userId = req.user._id;
