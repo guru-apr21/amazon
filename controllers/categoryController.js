@@ -1,14 +1,15 @@
 const Category = require("../models/Category");
 
-const getAllCategory = async () => {
+const getAllCategory = async (req, res) => {
   let category = await Category.find().populate("products");
-  return category;
+  res.json(category);
 };
 
-const createNewCategory = async (title) => {
+const createNewCategory = async (req, res) => {
+  const title = req.body.title;
   let category = new Category({ title });
   category = await category.save();
-  return category;
+  res.json(category);
 };
 
 const findCategoryById = async (id) => {
@@ -17,16 +18,21 @@ const findCategoryById = async (id) => {
   return category;
 };
 
-const updateCategory = async (id, updateObj) => {
+const updateCategory = async (req, res) => {
+  const id = req.params.id;
+  const updateObj = req.body;
   const category = await Category.findByIdAndUpdate(id, updateObj, {
     new: true,
   });
-  return category;
+  if (!category) return res.status(400).json("No category with the given id");
+  res.json(category);
 };
 
-const delCategoryById = async (id) => {
+const delCategory = async (req, res) => {
+  const id = req.params.id;
   const category = await Category.findByIdAndDelete(id);
-  return;
+  if (!category) return res.status(400).json("No category with the given id");
+  res.status(200).json(category);
 };
 
 module.exports = {
@@ -34,5 +40,5 @@ module.exports = {
   findCategoryById,
   updateCategory,
   getAllCategory,
-  delCategoryById,
+  delCategory,
 };

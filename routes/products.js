@@ -2,58 +2,27 @@ const express = require("express");
 const router = express.Router();
 const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
-const {
-  productController: {
-    getProduct,
-    getProducts,
-    createNewProduct,
-    updateProduct,
-    deleteProductById,
-  },
-  categoryController: { updateCategory, findCategoryById },
-} = require("../controllers/index");
 
-router.get("/", async (req, res) => {
-  const products = await getProducts();
-  res.json(products);
-});
+const { productController } = require("../controllers/main");
 
-router.get("/:id", async (req, res) => {
-  let product = await getProduct(req.params.id);
-  if (!product)
-    return res.status(400).json({ error: "No product with the given id" });
-  res.json(product);
-});
+//Respond with all available products
+router.get("/", productController.getProducts);
 
-router.post("/", [authenticateJwt, roleAuth], async (req, res) => {
-  const { ...newProduct } = req.body;
+//Respond with the product of given id in params
+router.get("/:id", productController.getProduct);
 
-  let category = await findCategoryById(newProduct.categoryId);
-  if (!category) return res.status(400).json({ error: "No such category" });
+//Create and respond with the new product
+router.post("/", authenticateJwt, roleAuth, productController.createNewProduct);
 
-  let product = await createNewProduct(newProduct, category);
-  res.status(201).json(product);
-});
+//Update the product details and respond with the updated object
+router.put("/:id", authenticateJwt, roleAuth, productController.updateProduct);
 
-router.put("/:id", [authenticateJwt, roleAuth], async (req, res) => {
-  const id = req.params.id;
-  const product = await updateProduct(id, req.body);
-  if (!product)
-    return res.status(400).json({ error: "No product with the given id" });
-  res.json(product);
-});
-
-router.delete("/:id", [authenticateJwt, roleAuth], async (req, res) => {
-  const id = req.params.id;
-
-  const product = await deleteProductById(id);
-  if (!product) return res.status(400).json("No product with the given id");
-
-  let { products, _id } = product.categoryId;
-  products = products.filter((p) => String(p) !== id);
-
-  await updateCategory(_id, { products });
-  res.status(204).json(product);
-});
+//Delete a product and respond with the deleted product
+router.delete(
+  "/:id",
+  authenticateJwt,
+  roleAuth,
+  productController.deleteProduct
+);
 
 module.exports = router;

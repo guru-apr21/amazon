@@ -2,36 +2,36 @@ const express = require("express");
 const router = express.Router();
 const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
-const {
-  categoryController: {
-    createNewCategory,
-    updateCategory,
-    getAllCategory,
-    delCategoryById,
-  },
-} = require("../controllers/index");
 
-router.get("/", async (req, res) => {
-  let category = await getAllCategory();
-  res.json(category);
-});
+const { categoryController } = require("../controllers/main");
 
-router.post("/", [authenticateJwt, roleAuth], async (req, res) => {
-  let category = await createNewCategory(req.body.title);
-  res.send(category);
-});
+//Responds with all available categories
+router.get("/", categoryController.getAllCategory);
 
-router.put("/:id", [authenticateJwt, roleAuth], async (req, res) => {
-  const id = req.params.id;
-  const category = await updateCategory(id, req.body);
-  if (!category) return res.status(400).json("No category with the given id");
-  res.json(category);
-});
+//Create and respond with newly created category
+router.post(
+  "/",
+  authenticateJwt,
+  roleAuth,
+  categoryController.createNewCategory
+);
 
-router.delete("/:id", [authenticateJwt, roleAuth], async (req, res) => {
-  const category = await delCategoryById(req.params.id);
-  if (!category) return res.status(400).json("No category with the given id");
-  res.status(200).json(category);
-});
+/*Update a existing category title or list of
+products and respond with the updated category*/
+router.put(
+  "/:id",
+  authenticateJwt,
+  roleAuth,
+  categoryController.updateCategory
+);
+
+/*Deletes a existing category collection from 
+the database and respond with the deleted category*/
+router.delete(
+  "/:id",
+  authenticateJwt,
+  roleAuth,
+  categoryController.delCategory
+);
 
 module.exports = router;

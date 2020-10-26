@@ -2,35 +2,19 @@ const express = require("express");
 const router = express.Router();
 const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
-const {
-  orderController: { getAllOrders, createOrders, deleteOrderById, payForOrder },
-} = require("../controllers/index");
 
-router.get("/", [authenticateJwt, roleAuth], async (req, res) => {
-  const orders = await getAllOrders();
-  res.json(orders);
-});
+const { orderController } = require("../controllers/main");
 
-router.post("/", authenticateJwt, async (req, res) => {
-  const user = req.user._id;
+//Respond with all orders
+router.get("/", authenticateJwt, roleAuth, orderController.getAllOrders);
 
-  const newOrder = await createOrders(user, req.body);
+//Create new order and respond with the order details
+router.post("/", authenticateJwt, orderController.createOrders);
 
-  res.status(201).json({ messsage: "New Order Created", data: newOrder });
-});
+//Delete an existing order and respond with the deleted order
+router.delete("/:id", authenticateJwt, roleAuth, orderController.deleteOrder);
 
-router.delete("/:id", [authenticateJwt, roleAuth], async (req, res) => {
-  const order = await deleteOrderById(req.params.id);
-  if (!order)
-    return res.status(404).json({ message: "No order with the given id" });
-  res.json({ message: "Order deleted Successfully", data: order });
-});
-
-router.put("/:id/pay", authenticateJwt, async (req, res) => {
-  const order = await payForOrder(req.params.id);
-
-  if (!order) return res.status(404).json("Order Not Found");
-  res.status(200).json({ messsage: "Order Paid", order });
-});
+//Makes payment for an existing order and respond with the order details
+router.put("/:id/pay", authenticateJwt, orderController.payForOrder);
 
 module.exports = router;

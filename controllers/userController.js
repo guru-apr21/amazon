@@ -1,9 +1,9 @@
 const User = require("../models/User");
-const { hashPassword } = require("../services/bcrypt");
+const { hashPassword, comparePassword } = require("../services/bcrypt");
 
-const getAllUsers = async () => {
+const getAllUsers = async (req, res) => {
   const users = await User.find();
-  return users;
+  res.json(users);
 };
 
 const findUserByEmailId = async (email) => {
@@ -16,13 +16,45 @@ const findUserById = async (id) => {
   return user;
 };
 
-const createUser = async (reqbody) => {
-  const { password, firstName, lastName, email, admin } = reqbody;
+const createUser = async (req, res) => {
+  const { password, firstName, lastName, email, admin } = req.body;
+
+  const duplicate = await User.findOne({ email });
+  if (duplicate) return res.status(400).json({ error: "User already exists" });
+
   const passwordHash = await hashPassword(password);
   const user = new User({ passwordHash, firstName, lastName, email, admin });
   await user.save();
   const token = user.genAuthToken();
-  return token;
+  res.json({ token });
+};
+
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await findUserByEmailId(email);
+  if (!user) return res.status(400).json({ error: "Invalid credentials" });
+
+  const match = await comparePassword(password, user.passwordHash);
+  if (!match) return res.status(400).json({ error: "Invalid credentials" });
+
+  const token = user.genAuthToken();
+  res.json({ token });
+};
+
+const changePassword = async (req, res) => {
+  const { email, _id: userId } = req.user;
+  let { password, newPassword } = req.body;
+  let user = await findUserByEmailId(email);
+  if (!user) return res.status(404).json("User not found");
+
+  const match = await comparePassword(password, user.passwordHash);
+  if (!match) return res.status(400).json("Invalid Credentials");
+
+  newPassword = await hashPassword(password);
+
+  user = await User.findByIdAndUpdate(userId, { passwordHash: newPassword });
+  res.status(200).send("Changed password successfully!");
 };
 
 module.exports = {
@@ -30,4 +62,6 @@ module.exports = {
   createUser,
   findUserById,
   getAllUsers,
+  loginUser,
+  changePassword,
 };

@@ -1,8 +1,8 @@
 const cartController = require("./cartController");
-const categoryController = require("./categoryController");
-const productController = require("./productController");
-const userController = require("./userController");
 const orderController = require("./orderController");
+const productController = require("./productController");
+const categoryController = require("./categoryController");
+const userController = require("./userController");
 
 module.exports = {
   cartController,
