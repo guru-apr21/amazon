@@ -8,6 +8,7 @@ const cart = require("./routes/cart");
 const products = require("./routes/products");
 const categories = require("./routes/category");
 const order = require("./routes/order");
+const reviews = require("./routes/review");
 const errorHandler = require("./middleware/error");
 
 mongoose.connect(
@@ -29,6 +30,7 @@ app.use("/api/cart", cart);
 app.use("/api/products", products);
 app.use("/api/category", categories);
 app.use("/api/orders", order);
+app.use("/api/reviews", reviews);
 
 app.use(errorHandler);
 

@@ -14,7 +14,6 @@ const createNewCategory = async (req, res) => {
 
 const findCategoryById = async (id) => {
   const category = await Category.findById(id);
-  console.log(category);
   return category;
 };
 

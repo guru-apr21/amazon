@@ -61,7 +61,7 @@ const createCart = async (req, res) => {
     });
     cart = await cart.save();
     cart.populate("userId").execPopulate();
-    res.status(201).json(newCart);
+    res.status(201).json(cart);
   }
 };
 

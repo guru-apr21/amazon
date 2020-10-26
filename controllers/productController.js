@@ -3,7 +3,9 @@ const Product = require("../models/Product");
 const { findCategoryById } = require("./categoryController");
 
 const getProducts = async (req, res) => {
-  let products = await Product.find().populate("categoryId");
+  let products = await Product.find()
+    .populate("categoryId")
+    .populate("reviews");
   res.json(products);
 };
 
