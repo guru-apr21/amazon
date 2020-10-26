@@ -11,7 +11,7 @@ const order = require("./routes/order");
 const errorHandler = require("./middleware/error");
 
 mongoose.connect(
-  "mongodb+srv://guru-apr21:guru-apr21@contact-keeper.dawpv.mongodb.net/amazon?retryWrites=true&w=majority",
+  process.env.mongoURL,
   {
     useUnifiedTopology: true,
     useNewUrlParser: true,
