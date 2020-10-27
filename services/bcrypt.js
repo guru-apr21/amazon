@@ -15,7 +15,7 @@ const comparePassword = async (password, hash) => {
 
 /**
  *
- * @param {*} password
+ * @param {String} password
  *
  * @returns Hash
  */
