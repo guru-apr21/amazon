@@ -31,29 +31,34 @@ const getAllReviews = async (req, res) => {
  * Also updates the reviews array in product documents
  */
 const postReview = async (req, res) => {
-  const user = req.user._id;
-  const { product, rating, review } = req.body;
+  try {
+    const user = req.user._id;
+    const { product, rating, review } = req.body;
 
-  const userReview = await Review.findOne({ user, product })
-    .populate("user")
-    .populate("product");
+    const userReview = await Review.findOne({ user, product })
+      .populate("user")
+      .populate("product");
 
-  if (userReview) {
-    userReview.rating = rating;
-    userReview.review = review;
+    if (userReview) {
+      userReview.rating = rating;
+      userReview.review = review;
 
-    await userReview.save();
-    return res.status(200).json(userReview);
-  } else {
-    const newReview = new Review({ user, product, rating, review });
+      await userReview.save();
+      return res.status(200).json(userReview);
+    } else {
+      const newReview = new Review({ user, product, rating, review });
 
-    const reviewedProduct = await Product.findById(product);
-    reviewedProduct.reviews = [...reviewedProduct.reviews, newReview._id];
-    await reviewedProduct.save();
+      const reviewedProduct = await Product.findById(product);
+      reviewedProduct.reviews = [...reviewedProduct.reviews, newReview._id];
+      await reviewedProduct.save();
 
-    await newReview.save();
-    await newReview.populate("user").populate("product").execPopulate();
-    res.json({ message: "Review posted successfully!", data: newReview });
+      await newReview.save();
+      await newReview.populate("user").populate("product").execPopulate();
+      res.json({ message: "Review posted successfully!", data: newReview });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
   }
 };
 
@@ -70,22 +75,27 @@ const postReview = async (req, res) => {
  * Also updates the reviews array in product documents
  */
 const deleteReview = async (req, res) => {
-  const id = req.params.id;
-  const user = req.user._id;
+  try {
+    const id = req.params.id;
+    const user = req.user._id;
 
-  const review = await Review.findById(id);
-  if (!review) return res.status(404).json("No review with the given id");
+    const review = await Review.findById(id);
+    if (!review) return res.status(404).json("No review with the given id");
 
-  if (String(review.user) !== user) return res.status(403).end();
+    if (String(review.user) !== user) return res.status(403).end();
 
-  const reviewedProduct = await Product.findById(review.product);
-  reviewedProduct.reviews = reviewedProduct.reviews.filter(
-    (rev) => String(rev) !== id
-  );
-  await reviewedProduct.save();
+    const reviewedProduct = await Product.findById(review.product);
+    reviewedProduct.reviews = reviewedProduct.reviews.filter(
+      (rev) => String(rev) !== id
+    );
+    await reviewedProduct.save();
 
-  await Review.deleteOne({ _id: id });
-  res.status(201).json("Review deleted successfully!");
+    await Review.deleteOne({ _id: id });
+    res.status(201).json("Review deleted successfully!");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 module.exports = { getAllReviews, postReview, deleteReview };

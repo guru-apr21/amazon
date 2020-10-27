@@ -9,8 +9,13 @@ const { hashPassword, comparePassword } = require("../services/bcrypt");
  * @returns {Array} users array
  */
 const getAllUsers = async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -19,8 +24,13 @@ const getAllUsers = async (req, res) => {
  * @returns {Object} user object
  */
 const findUserByEmailId = async (email) => {
-  const user = await User.findOne({ email });
-  return user;
+  try {
+    const user = await User.findOne({ email });
+    return user;
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -29,8 +39,13 @@ const findUserByEmailId = async (email) => {
  * @returns user Object
  */
 const findUserById = async (id) => {
-  const user = await User.findById(id);
-  return user;
+  try {
+    const user = await User.findById(id);
+    return user;
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -48,16 +63,22 @@ const findUserById = async (id) => {
  * Register user in the database
  */
 const createUser = async (req, res) => {
-  const { password, firstName, lastName, email, admin } = req.body;
+  try {
+    const { password, firstName, lastName, email, admin } = req.body;
 
-  const duplicate = await User.findOne({ email });
-  if (duplicate) return res.status(400).json({ error: "User already exists" });
+    const duplicate = await User.findOne({ email });
+    if (duplicate)
+      return res.status(400).json({ error: "User already exists" });
 
-  const passwordHash = await hashPassword(password);
-  const user = new User({ passwordHash, firstName, lastName, email, admin });
-  await user.save();
-  const token = user.genAuthToken();
-  res.json({ token });
+    const passwordHash = await hashPassword(password);
+    const user = new User({ passwordHash, firstName, lastName, email, admin });
+    await user.save();
+    const token = user.genAuthToken();
+    res.json({ token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -72,16 +93,21 @@ const createUser = async (req, res) => {
  * Login exisiting user in the database
  */
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await findUserByEmailId(email);
-  if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    const user = await findUserByEmailId(email);
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-  const match = await comparePassword(password, user.passwordHash);
-  if (!match) return res.status(400).json({ error: "Invalid credentials" });
+    const match = await comparePassword(password, user.passwordHash);
+    if (!match) return res.status(400).json({ error: "Invalid credentials" });
 
-  const token = user.genAuthToken();
-  res.json({ token });
+    const token = user.genAuthToken();
+    res.json({ token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 /**
@@ -97,18 +123,23 @@ const loginUser = async (req, res) => {
  * Change password for an existing user if credentials is correct
  */
 const changePassword = async (req, res) => {
-  const { email } = req.user;
-  let { password, newPassword } = req.body;
-  let user = await findUserByEmailId(email);
-  if (!user) return res.status(404).json("User not found");
+  try {
+    const { email } = req.user;
+    let { password, newPassword } = req.body;
+    let user = await findUserByEmailId(email);
+    if (!user) return res.status(404).json("User not found");
 
-  const match = await comparePassword(password, user.passwordHash);
-  if (!match) return res.status(400).json("Invalid Credentials");
+    const match = await comparePassword(password, user.passwordHash);
+    if (!match) return res.status(400).json("Invalid Credentials");
 
-  newPassword = await hashPassword(newPassword);
-  user.passwordHash = newPassword;
-  await user.save();
-  res.status(200).send("Changed password successfully!");
+    newPassword = await hashPassword(newPassword);
+    user.passwordHash = newPassword;
+    await user.save();
+    res.status(200).send("Changed password successfully!");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Something went wrong");
+  }
 };
 
 module.exports = {
@@ -119,17 +150,3 @@ module.exports = {
   loginUser,
   changePassword,
 };
-
-/**
- * @params {header: JWT 'token'}
- * @params req.body.product.name - required
- * @params req.body.product.type
- *
- * @params req.body.plan.nickName
- * @params req.body.plan.amount
- * @params req.body.plan.currency must be supported format e.g ('inr', 'usd')
- * @params req.body.plan.interval  Either day, week, month or year.
- * @params req.body.plan.usage_type [licensed, metered]
- *
- * @returns {StripePlan}
- */
