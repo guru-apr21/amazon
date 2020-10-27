@@ -7,7 +7,7 @@ const Category = require("../models/Category");
  *
  * @returns {Array} Array of category documents with products field populated
  */
-const getAllCategory = async (req, res) => {
+const getAllCategory = async (req, res, next) => {
   try {
     let category = await Category.find().populate("products");
     res.json(category);
