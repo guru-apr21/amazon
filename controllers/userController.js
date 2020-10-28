@@ -39,13 +39,8 @@ const findUserByEmailId = async (email) => {
  * @returns user Object
  */
 const findUserById = async (id) => {
-  try {
-    const user = await User.findById(id);
-    return user;
-  } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
-  }
+  const user = await User.findById(id);
+  return user;
 };
 
 /**
@@ -62,7 +57,7 @@ const findUserById = async (id) => {
  *
  * Register user in the database
  */
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const { password, firstName, lastName, email, admin } = req.body;
 
@@ -76,8 +71,7 @@ const createUser = async (req, res) => {
     const token = user.genAuthToken();
     res.json({ token });
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -122,7 +116,7 @@ const loginUser = async (req, res) => {
  *
  * Change password for an existing user if credentials is correct
  */
-const changePassword = async (req, res) => {
+const changePassword = async (req, res, next) => {
   try {
     const { email } = req.user;
     let { password, newPassword } = req.body;
@@ -130,15 +124,13 @@ const changePassword = async (req, res) => {
     if (!user) return res.status(404).json("User not found");
 
     const match = await comparePassword(password, user.passwordHash);
-    if (!match) return res.status(400).json("Invalid Credentials");
-
+    if (!match) return res.status(204).json("Invalid Credentials");
     newPassword = await hashPassword(newPassword);
     user.passwordHash = newPassword;
     await user.save();
-    res.status(200).send("Changed password successfully!");
+    res.status(204).end();
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
