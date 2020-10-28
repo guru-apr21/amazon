@@ -9,15 +9,14 @@ const { findCategoryById } = require("./categoryController");
  *
  * @returns {Array} products array with reviews and categoryId populated
  */
-const getProducts = async (req, res) => {
+const getProducts = async (req, res, next) => {
   try {
     let products = await Product.find({})
       .populate("categoryId")
       .populate("reviews");
     res.json(products);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -28,7 +27,7 @@ const getProducts = async (req, res) => {
  *
  * @returns {Object} product object with the provided params id
  */
-const getProduct = async (req, res) => {
+const getProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     let product = await Product.findById(id)
@@ -37,8 +36,7 @@ const getProduct = async (req, res) => {
     if (!product) return res.status(404).send("No product with the given id");
     res.json(product);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 

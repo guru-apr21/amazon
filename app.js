@@ -10,18 +10,20 @@ const order = require("./routes/order");
 const reviews = require("./routes/review");
 const errorHandler = require("./middleware/error");
 
-mongoose.connect(
-  MONGO_URL,
-  {
+console.log(MONGO_URL);
+mongoose
+  .connect(MONGO_URL, {
     useUnifiedTopology: true,
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
-  },
-  () => {
+  })
+  .then(() => {
     console.log("Connected to the database");
-  }
-);
+  })
+  .catch((err) => {
+    console.log("Error connecting to the database", err);
+  });
 
 app.use(express.json());
 app.use("/api/users", userRouter);
