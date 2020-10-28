@@ -54,7 +54,7 @@ const getProduct = async (req, res, next) => {
  *
  * Also updates the products array in category documents
  */
-const createNewProduct = async (req, res) => {
+const createNewProduct = async (req, res, next) => {
   try {
     const { ...newProduct } = req.body;
 
@@ -71,8 +71,7 @@ const createNewProduct = async (req, res) => {
 
     res.status(201).json(product);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -86,18 +85,17 @@ const createNewProduct = async (req, res) => {
  * @returns updated product object
  */
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     const updateObj = req.body;
     const product = await Product.findByIdAndUpdate(id, updateObj, {
       new: true,
     });
-    if (!product) return res.status(400).json("Product not found");
+    if (!product) return res.status(404).json("Product not found");
     res.json(product);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -111,7 +109,7 @@ const updateProduct = async (req, res) => {
  *
  * Also updates the products array in category documets
  */
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     const product = await Product.findByIdAndDelete(id).populate("categoryId");
@@ -121,10 +119,9 @@ const deleteProduct = async (req, res) => {
     products = products.filter((p) => String(p) !== id);
 
     await Category.findByIdAndUpdate(_id, { products });
-    res.status(204).json(product);
+    res.status(204).end();
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 

@@ -81,10 +81,10 @@ describe("PUT /:id", () => {
 describe("DELETE /:id", () => {
   it("returns 404 if category not found", async () => {
     const id = new mongoose.Types.ObjectId();
-    api
+    await api
       .delete(`/api/category/${id}`)
       .set("Authorization", "Bearer " + token)
-      .expect(400);
+      .expect(404);
   });
 
   it("returns 204 if deleted successfully", async () => {

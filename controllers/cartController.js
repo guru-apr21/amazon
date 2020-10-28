@@ -28,8 +28,8 @@ const findCartByUserId = async (id) => {
 const getCartItems = async (req, res, next) => {
   try {
     const cart = await findCartByUserId(req.user._id);
-    if (!cart || cart.products.length < 1) return next(new Response(204));
-    return next(new Response(200, cart));
+    if (!cart || cart.products.length < 1) return res.status(204).end();
+    return res.json(cart);
   } catch (err) {
     next(err);
   }
@@ -56,9 +56,6 @@ const createCart = async (req, res, next) => {
     const { _id: userId } = req.user;
     const { productId, quantity, title, price } = req.body;
 
-    const user = await userController.findUserById(userId);
-    if (!user) return next(new Response(404, "User not found"));
-
     let cart = await Cart.findOne({ userId: userId }).populate("userId");
 
     if (cart) {
@@ -81,7 +78,7 @@ const createCart = async (req, res, next) => {
       }
       cart = await cart.save();
 
-      next(new Response(200, cart));
+      res.json(cart);
     } else {
       /**
        * Create new cart if the user has no cart
@@ -92,7 +89,7 @@ const createCart = async (req, res, next) => {
       });
       cart = await cart.save();
       cart.populate("userId").execPopulate();
-      next(new Response(201, cart));
+      res.status(201).json(cart);
     }
   } catch (err) {
     next(err);
@@ -123,7 +120,7 @@ const removeProdFromCart = async (req, res, next) => {
     );
     cart = await cart.save();
 
-    next(new Response(200, cart));
+    res.json(cart);
   } catch (err) {
     next(err);
   }
@@ -142,11 +139,12 @@ const emptyCart = async (req, res, next) => {
     const userId = req.user._id;
     let cart = await findCartByUserId(userId);
 
-    if (!cart || cart.products.length < 1) return next(new Response(400));
+    if (!cart || cart.products.length < 1)
+      return res.status(400).json("Cart is empty already");
 
     cart.products = [];
     cart = await cart.save();
-    res.json("Cart is emptied");
+    res.status(204).end();
   } catch (err) {
     next(err);
   }
