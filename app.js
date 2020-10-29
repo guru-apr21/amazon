@@ -10,7 +10,6 @@ const order = require("./routes/order");
 const reviews = require("./routes/review");
 const errorHandler = require("./middleware/error");
 
-console.log(MONGO_URL);
 mongoose
   .connect(MONGO_URL, {
     useUnifiedTopology: true,
