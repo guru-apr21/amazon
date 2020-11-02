@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { hashPassword, comparePassword } = require("../services/bcrypt");
 const Stripe = require("stripe");
+const Address = require("../models/Address");
 const stripe = Stripe(
   "sk_test_51HhUbGDRaW3L2zxrOz9d8TOvQRpmQxM489GvgsN0IXlKJS4lN5LK4YUn3INZ2wWeQfwtwZAjKuT5sJHXnqJn5NDj00XE57kVEF"
 );
@@ -59,6 +60,7 @@ const findUserById = async (id) => {
  * @returns status 400 if user exists
  * @returns jwt token with user info payload
  *
+ * Creates stripe customer obj with name and email address and stores them in database
  * Register user in the database
  */
 const createUser = async (req, res, next) => {
@@ -151,6 +153,37 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+const getUserAddresses = async (req, res, next) => {
+  try {
+    const addresses = await Address.find({ user: req.user._id });
+    if (!addresses)
+      return res.status(404).json("No address with the given id.");
+    res.json(addresses);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createNewAddress = async (req, res, next) => {
+  try {
+    const { city, country, line1, line2, postal_code, state } = req.body;
+    let address = new Address({
+      user: req.user._id,
+      city,
+      country,
+      line1,
+      line2,
+      postal_code,
+      state,
+    });
+
+    address = await address.save();
+    return res.json(address);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findUserByEmailId,
   createUser,
@@ -158,4 +191,6 @@ module.exports = {
   getAllUsers,
   loginUser,
   changePassword,
+  getUserAddresses,
+  createNewAddress,
 };

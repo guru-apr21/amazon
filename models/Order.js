@@ -1,12 +1,5 @@
 const mongoose = require("mongoose");
 
-const shippingSchema = {
-  address: { type: String, required: true },
-  city: { type: String, required: true },
-  postalCode: { type: String, required: true },
-  country: { type: String, required: true },
-};
-
 const orderItemSchema = {
   quantity: { type: Number, required: true },
   productId: {
@@ -19,14 +12,17 @@ const orderItemSchema = {
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    orderItems: [orderItemSchema],
-    shipping: shippingSchema,
-    payment: String,
+    // orderItems: [orderItemSchema],
+    shipping: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+      required: true,
+    },
+    stripePaymentId: String,
     itemsPrice: Number,
     shippingPrice: Number,
     totalPrice: Number,
-    isPaid: { type: Boolean, default: false },
-    paidAt: Date,
+    paidAt: { type: Date, default: Date.now() },
     isDelivered: { type: Boolean, default: false },
     deliveredAt: Date,
   },

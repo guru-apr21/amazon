@@ -18,7 +18,8 @@
     "joi": "^17.2.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.10.9",
-    "nodemon": "^2.0.5"
+    "nodemon": "^2.0.5",
+    "stripe": "^8.119.0"
   },
   "devDependencies": {
     "jest": "^26.6.1",

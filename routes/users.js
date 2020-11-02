@@ -15,4 +15,10 @@ router.post("/signin", userController.loginUser);
 //Change password of an existing user
 router.put("/changepwd", authenticateJwt, userController.changePassword);
 
+//Get addresses of a given userId
+router.get("/address", authenticateJwt, userController.getUserAddresses);
+
+//Create new Address
+router.post("/address", authenticateJwt, userController.createNewAddress);
+
 module.exports = router;
