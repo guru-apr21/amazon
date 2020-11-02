@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
   admin: { type: Boolean, default: false },
+  stripeCustomerId:{type:String,default:false}
 });
 
 userSchema.set("toJSON", {
@@ -22,7 +23,7 @@ userSchema.set("toJSON", {
 
 userSchema.methods.genAuthToken = function () {
   return jwt.sign(
-    { _id: this._id, email: this.email, admin: this.admin },
+    { _id: this._id, email: this.email, admin: this.admin,stripeCustomerId=this.stripeCustomerId },
     process.env.jwtPrivateKey,
     {
       expiresIn: "48h",

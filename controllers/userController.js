@@ -1,5 +1,9 @@
 const User = require("../models/User");
 const { hashPassword, comparePassword } = require("../services/bcrypt");
+const Stripe = require("stripe");
+const stripe = Stripe(
+  "sk_test_51HhUbGDRaW3L2zxrOz9d8TOvQRpmQxM489GvgsN0IXlKJS4lN5LK4YUn3INZ2wWeQfwtwZAjKuT5sJHXnqJn5NDj00XE57kVEF"
+);
 
 /**
  *
@@ -66,7 +70,20 @@ const createUser = async (req, res, next) => {
       return res.status(400).json({ error: "User already exists" });
 
     const passwordHash = await hashPassword(password);
-    const user = new User({ passwordHash, firstName, lastName, email, admin });
+
+    const name = `${firstName} ${lastName}`;
+    const customer = await stripe.customers.create({
+      email,
+      name,
+    });
+    const user = new User({
+      passwordHash,
+      firstName,
+      lastName,
+      email,
+      admin,
+      stripeCustomerId: customer.id,
+    });
     await user.save();
     const token = user.genAuthToken();
     res.json({ token });
