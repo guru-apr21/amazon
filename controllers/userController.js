@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const { hashPassword, comparePassword } = require("../services/bcrypt");
+const { stripe } = require("../utils/config");
+const { uploadToS3, S3 } = require("../services/file_upload");
 
 /**
  *
@@ -55,6 +57,7 @@ const findUserById = async (id) => {
  * @returns status 400 if user exists
  * @returns jwt token with user info payload
  *
+ * Creates stripe customer obj with name and email address and stores them in database
  * Register user in the database
  */
 const createUser = async (req, res, next) => {
@@ -66,7 +69,21 @@ const createUser = async (req, res, next) => {
       return res.status(400).json({ error: "User already exists" });
 
     const passwordHash = await hashPassword(password);
-    const user = new User({ passwordHash, firstName, lastName, email, admin });
+
+    const name = `${firstName} ${lastName}`;
+    const customer = await stripe.customers.create({
+      email,
+      name,
+    });
+
+    const user = new User({
+      passwordHash,
+      firstName,
+      lastName,
+      email,
+      admin,
+      stripeCustomerId: customer.id,
+    });
     await user.save();
     const token = user.genAuthToken();
     res.json({ token });
@@ -134,6 +151,42 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+//Used to upload and change the avatar picture
+const uploadAvatar = async (req, res, next) => {
+  try {
+    const data = await uploadToS3(req.file, "userAvatars");
+    let user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        avatar: data,
+      },
+      { new: true }
+    );
+    return res.json(user);
+  } catch (err) {
+    console.log("Error occured while trying to upload to S3 bucket", err);
+  }
+};
+
+//Used to delete a avatar picture
+const deleteAvatar = async (req, res, next) => {
+  try {
+    const data = await S3.deleteObject({
+      Bucket: "guru-s3demo",
+      Key: `userAvatars/${req.user._id}.JPG`,
+    }).promise();
+    console.log(data);
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $unset: { avatar: 1 } },
+      { new: true }
+    );
+    return res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findUserByEmailId,
   createUser,
@@ -141,4 +194,6 @@ module.exports = {
   getAllUsers,
   loginUser,
   changePassword,
+  uploadAvatar,
+  deleteAvatar,
 };

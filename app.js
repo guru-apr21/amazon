@@ -8,6 +8,8 @@ const products = require("./routes/products");
 const categories = require("./routes/category");
 const order = require("./routes/order");
 const reviews = require("./routes/review");
+const address = require("./routes/address");
+const stripe = require("./routes/payment");
 const errorHandler = require("./middleware/error");
 
 mongoose
@@ -31,6 +33,8 @@ app.use("/api/products", products);
 app.use("/api/category", categories);
 app.use("/api/orders", order);
 app.use("/api/reviews", reviews);
+app.use("/api/address", address);
+app.use("/api/stripe", stripe);
 
 app.use(errorHandler);
 

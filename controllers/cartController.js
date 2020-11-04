@@ -1,13 +1,4 @@
 const Cart = require("../models/Cart");
-const userController = require("./userController");
-
-class Response extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-    this.message = message;
-  }
-}
 
 const findCartByUserId = async (id) => {
   const cart = await Cart.findOne({ userId: id }).populate("userId");

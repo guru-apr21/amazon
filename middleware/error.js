@@ -1,5 +1,13 @@
 module.exports = (err, req, res, next) => {
-  switch (err.status || err.name) {
+  console.log(err.type);
+  console.log(err);
+  switch (err.type || err.status || err.name) {
+    case "StripeCardError":
+      res.status(err.statusCode).json(err.message);
+      break;
+    case "StripeInvalidRequestError":
+      res.status(err.statusCode).json(err.message);
+      break;
     case 200:
       res.status(200).json(err.message);
       break;
@@ -9,6 +17,9 @@ module.exports = (err, req, res, next) => {
       break;
     case 404:
       res.status(404).json(err.message);
+      break;
+    case 400:
+      res.status(400).json(err.message);
       break;
     case "CastError":
       res.status(400).json(err.message);

@@ -36,21 +36,10 @@ const createOrders = async (req, res, next) => {
   try {
     const user = req.user._id;
     const ordDetails = req.body;
-    const {
-      shipping,
-      itemsPrice,
-      shippingPrice,
-      totalPrice,
-      orderItems,
-    } = ordDetails;
 
     let newOrder = new Order({
       user,
-      orderItems,
-      shipping,
-      itemsPrice,
-      shippingPrice,
-      totalPrice,
+      ...ordDetails,
     });
 
     newOrder = await newOrder.save();
@@ -84,36 +73,36 @@ const deleteOrder = async (req, res, next) => {
   }
 };
 
-/**
- *
- * @param {ObjectID} req.params.id
- * @param {*} res
- *
- * @returns status 404 if order not found
- * @returns status 200 with order paid message and order object
- *
- * sets isPaid,paidAt,payment properties and save the order document
- */
-const payForOrder = async (req, res) => {
-  try {
-    const id = req.params.id;
-    let order = await Order.findById(id);
-    if (!order) return res.status(404).json("Order Not Found");
+// /**
+//  *
+//  * @param {ObjectID} req.params.id
+//  * @param {*} res
+//  *
+//  * @returns status 404 if order not found
+//  * @returns status 200 with order paid message and order object
+//  *
+//  * sets isPaid,paidAt,payment properties and save the order document
+//  */
+// const payForOrder = async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     let order = await Order.findById(id);
+//     if (!order) return res.status(404).json("Order Not Found");
 
-    order.isPaid = true;
-    order.paidAt = Date.now();
-    order.payment = "paypal";
-    order = await order.save();
-    order = await order
-      .populate("user")
-      .populate({ path: "orderItems", populate: { path: "productId" } })
-      .execPopulate();
+//     order.isPaid = true;
+//     order.paidAt = Date.now();
+//     order.payment = "paypal";
+//     order = await order.save();
+//     order = await order
+//       .populate("user")
+//       .populate({ path: "orderItems", populate: { path: "productId" } })
+//       .execPopulate();
 
-    res.status(200).json({ messsage: "Order Paid", order });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
-  }
-};
+//     res.status(200).json({ messsage: "Order Paid", order });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Something went wrong");
+//   }
+// };
 
-module.exports = { getAllOrders, createOrders, deleteOrder, payForOrder };
+module.exports = { getAllOrders, createOrders, deleteOrder };

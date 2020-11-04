@@ -15,6 +15,6 @@ router.post("/", authenticateJwt, orderController.createOrders);
 router.delete("/:id", authenticateJwt, roleAuth, orderController.deleteOrder);
 
 //Makes payment for an existing order and respond with the order details
-router.put("/:id/pay", authenticateJwt, orderController.payForOrder);
+// router.put("/:id/pay", authenticateJwt, orderController.payForOrder);
 
 module.exports = router;

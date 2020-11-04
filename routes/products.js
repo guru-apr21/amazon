@@ -5,6 +5,9 @@ const roleAuth = require("../middleware/role");
 
 const { productController } = require("../controllers/main");
 
+const multer = require("multer");
+const upload = multer({ dest: "temp/" }).array("products", 4);
+
 //Respond with all available products
 router.get("/", productController.getProducts);
 
@@ -24,5 +27,7 @@ router.delete(
   roleAuth,
   productController.deleteProduct
 );
+
+router.post("/upload-images", upload, productController.uploadProductImages);
 
 module.exports = router;
