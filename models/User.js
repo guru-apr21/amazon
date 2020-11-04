@@ -1,4 +1,4 @@
-require("dotenv").config();
+const { jwtPrivateKey } = require("../utils/config");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   admin: { type: Boolean, default: false },
   stripeCustomerId: { type: String, required: true },
-  addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
+  avatar: String,
 });
 
 userSchema.set("toJSON", {
@@ -29,7 +29,7 @@ userSchema.methods.genAuthToken = function () {
       admin: this.admin,
       stripeCustomerId: this.stripeCustomerId,
     },
-    process.env.jwtPrivateKey,
+    jwtPrivateKey,
     {
       expiresIn: "48h",
     }

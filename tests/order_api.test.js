@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Category = require("../models/Category");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Address = require("../models/Address");
 
 const user = {
   firstName: "Lokesh",
@@ -24,27 +25,32 @@ const productObj = {
 };
 
 const orderObj = {
-  shipping: {
-    address: "26 Arignar Anna 4th Street manthithoppu Kovilpatti",
-    city: "Tuticorin",
-    postalCode: "628601",
-    country: "India",
-  },
   itemsPrice: 14999,
   shippingPrice: 100,
   totalPrice: 15099,
+};
+
+const addressObj = {
+  city: "Tuticorin",
+  country: "IN",
+  line1: "No 26, Arignar Anna 4th street, Manthithoppu road",
+  line2: "Anna nagar, Kovilpatti",
+  postal_code: "628501",
+  state: "Tamil Nadu",
 };
 
 let token;
 let product;
 let category;
 let order;
+let address;
 
 beforeEach(async () => {
   await User.deleteMany({});
   await Category.deleteMany({});
   await Product.deleteMany({});
   await Order.deleteMany({});
+  await Address.deleteMany({});
 
   const response = await api.post("/api/users/signup").send(user);
   token = response.body.token;
@@ -59,11 +65,17 @@ beforeEach(async () => {
     .set("Authorization", "Bearer " + token)
     .send({ ...productObj, categoryId: category.body._id });
 
+  address = await api
+    .post("/api/address")
+    .set("Authorization", "Bearer " + token)
+    .send(addressObj);
+
   order = await api
     .post("/api/orders")
     .set("Authorization", "Bearer " + token)
     .send({
       ...orderObj,
+      shipping: address.body._id,
       orderItems: [
         {
           quantity: 2,
@@ -86,7 +98,12 @@ describe("GET /", () => {
 
 describe("POST /", () => {
   it("Create new order and returns 201", async () => {
-    expect(order).toHaveProperty("status", 201);
+    const response = await api
+      .post("/api/orders")
+      .set("Authorization", "Bearer " + token)
+      .send({ totalPrice: 15999, shipping: address.body._id })
+      .expect(201);
+    expect(response.body.data).toHaveProperty("shipping", address.body._id);
   });
 });
 

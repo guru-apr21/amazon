@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { userController } = require("../controllers/main");
 const authenticateJwt = require("../middleware/auth");
+const multer = require("multer");
+const upload = multer({ dest: "temp/" }).single("avatar");
 
 //Respond with all available users
 router.get("/", userController.getAllUsers);
@@ -15,10 +17,9 @@ router.post("/signin", userController.loginUser);
 //Change password of an existing user
 router.put("/changepwd", authenticateJwt, userController.changePassword);
 
-//Get addresses of a given userId
-router.get("/address", authenticateJwt, userController.getUserAddresses);
+//Upload a avatar image
+router.post("/avatar", authenticateJwt, upload, userController.uploadAvatar);
 
-//Create new Address
-router.post("/address", authenticateJwt, userController.createNewAddress);
-
+//Delete user's existing avatar from s3 and also from db
+router.delete("/avatar", authenticateJwt, userController.deleteAvatar);
 module.exports = router;

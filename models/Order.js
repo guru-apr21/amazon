@@ -12,17 +12,17 @@ const orderItemSchema = {
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    // orderItems: [orderItemSchema],
+    orderItems: [orderItemSchema],
     shipping: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Address",
-      required: true,
     },
-    stripePaymentId: String,
+    stripePaymentIntentId: String,
     itemsPrice: Number,
     shippingPrice: Number,
-    totalPrice: Number,
-    paidAt: { type: Date, default: Date.now() },
+    totalPrice: { type: Number, required: true },
+    isPaid: { type: Boolean, default: false },
+    paidAt: Date,
     isDelivered: { type: Boolean, default: false },
     deliveredAt: Date,
   },

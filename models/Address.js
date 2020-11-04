@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const shippingSchema = new mongoose.Schema({
+const addressSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, required: true },
   line1: { type: String, required: true },
   line2: { type: String, required: true },
@@ -10,12 +10,12 @@ const shippingSchema = new mongoose.Schema({
   country: { type: String, required: true },
 });
 
-shippingSchema.set("toJSON", {
+addressSchema.set("toJSON", {
   transform: (document, returnedObject) => {
     returnedObject._id = returnedObject._id.toString();
     delete returnedObject.__v;
   },
 });
 
-const Address = mongoose.model("Address", shippingSchema);
+const Address = mongoose.model("Address", addressSchema);
 module.exports = Address;
