@@ -1,6 +1,7 @@
 const Category = require("../models/Category");
 const Product = require("../models/Product");
 const { findCategoryById } = require("./categoryController");
+const { uploadToS3, S3 } = require("../services/file_upload");
 
 /**
  *
@@ -125,10 +126,48 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
+/**
+ *
+ * @param {File} req.files
+ * @param {} req.body.productId
+ * @param {*} res
+ * @param {*} next
+ *
+ * @returns 404 if product with the given id is not found
+ * @returns 200 if images uploaded successfully to aws s3
+ * and stores the cloudfront url in db
+ */
+
+const uploadProductImages = async (req, res, next) => {
+  try {
+    const images = await uploadToS3(req.files, "productImages");
+    const productId = req.body.productId;
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      { images: images },
+      { new: true }
+    );
+    if (!product) {
+      const Objects = images.map((url) => {
+        return { Key: url };
+      });
+      await S3.deleteObjects({
+        Bucket: "guru-s3demo",
+        Delete: { Objects: Objects },
+      }).promise();
+      return res.status(404).json("No product with the given id");
+    }
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProduct,
   getProducts,
   createNewProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImages,
 };

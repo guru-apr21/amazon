@@ -1,10 +1,7 @@
 const User = require("../models/User");
 const { hashPassword, comparePassword } = require("../services/bcrypt");
-const Stripe = require("stripe");
-const Address = require("../models/Address");
-const stripe = Stripe(
-  "sk_test_51HhUbGDRaW3L2zxrOz9d8TOvQRpmQxM489GvgsN0IXlKJS4lN5LK4YUn3INZ2wWeQfwtwZAjKuT5sJHXnqJn5NDj00XE57kVEF"
-);
+const { stripe } = require("../utils/config");
+const { uploadToS3, S3 } = require("../services/file_upload");
 
 /**
  *
@@ -78,6 +75,7 @@ const createUser = async (req, res, next) => {
       email,
       name,
     });
+
     const user = new User({
       passwordHash,
       firstName,
@@ -153,32 +151,37 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-const getUserAddresses = async (req, res, next) => {
+//Used to upload and change the avatar picture
+const uploadAvatar = async (req, res, next) => {
   try {
-    const addresses = await Address.find({ user: req.user._id });
-    if (!addresses)
-      return res.status(404).json("No address with the given id.");
-    res.json(addresses);
-  } catch (error) {
-    next(error);
+    const data = await uploadToS3(req.file, "userAvatars");
+    let user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        avatar: data,
+      },
+      { new: true }
+    );
+    return res.json(user);
+  } catch (err) {
+    console.log("Error occured while trying to upload to S3 bucket", err);
   }
 };
 
-const createNewAddress = async (req, res, next) => {
+//Used to delete a avatar picture
+const deleteAvatar = async (req, res, next) => {
   try {
-    const { city, country, line1, line2, postal_code, state } = req.body;
-    let address = new Address({
-      user: req.user._id,
-      city,
-      country,
-      line1,
-      line2,
-      postal_code,
-      state,
-    });
-
-    address = await address.save();
-    return res.json(address);
+    const data = await S3.deleteObject({
+      Bucket: "guru-s3demo",
+      Key: `userAvatars/${req.user._id}.JPG`,
+    }).promise();
+    console.log(data);
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $unset: { avatar: 1 } },
+      { new: true }
+    );
+    return res.json(user);
   } catch (error) {
     next(error);
   }
@@ -191,6 +194,6 @@ module.exports = {
   getAllUsers,
   loginUser,
   changePassword,
-  getUserAddresses,
-  createNewAddress,
+  uploadAvatar,
+  deleteAvatar,
 };

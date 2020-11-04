@@ -92,6 +92,7 @@ const confirmPaymentIntent = async (req, res, next) => {
       let order = await Order.findByIdAndUpdate(orderId, {
         shipping: address,
         isPaid: true,
+        paidAt: Date.now(),
       });
 
       order = await order.populate("shipping").execPopulate();
