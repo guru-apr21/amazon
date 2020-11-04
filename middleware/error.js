@@ -18,6 +18,9 @@ module.exports = (err, req, res, next) => {
     case 404:
       res.status(404).json(err.message);
       break;
+    case 400:
+      res.status(400).json(err.message);
+      break;
     case "CastError":
       res.status(400).json(err.message);
       break;
