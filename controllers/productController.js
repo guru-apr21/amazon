@@ -12,9 +12,22 @@ const { uploadToS3, S3 } = require("../services/file_upload");
  */
 const getProducts = async (req, res, next) => {
   try {
-    let products = await Product.find({})
+    const searchString = req.query.name || "";
+    const limit = req.query.limit || 10;
+    const sortFields = req.query.sort || "price";
+    const gt = req.query.gt || 0;
+    let products = await Product.find({
+      $or: [
+        {
+          title: { $regex: searchString, $options: "i" },
+        },
+        { description: { $regex: searchString, $options: "i" } },
+      ],
+      price: { $gt: gt },
+    })
       .populate("categoryId")
-      .populate("reviews");
+      .limit(Number(limit))
+      .sort(sortFields);
     res.json(products);
   } catch (error) {
     next(error);
