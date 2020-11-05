@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
-
+const { allowIfLoggedIn } = require("../middleware/auth");
 const { categoryController } = require("../controllers/main");
 
 //Responds with all available categories
@@ -11,7 +10,7 @@ router.get("/", categoryController.getAllCategory);
 //Create and respond with newly created category
 router.post(
   "/",
-  authenticateJwt,
+  allowIfLoggedIn,
   roleAuth,
   categoryController.createNewCategory
 );
@@ -20,7 +19,7 @@ router.post(
 products and respond with the updated category*/
 router.put(
   "/:id",
-  authenticateJwt,
+  allowIfLoggedIn,
   roleAuth,
   categoryController.updateCategory
 );
@@ -29,7 +28,7 @@ router.put(
 the database and respond with the deleted category*/
 router.delete(
   "/:id",
-  authenticateJwt,
+  allowIfLoggedIn,
   roleAuth,
   categoryController.delCategory
 );

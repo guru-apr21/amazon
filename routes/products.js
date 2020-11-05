@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const authenticateJwt = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
+const { allowIfLoggedIn } = require("../middleware/auth");
 
 const { productController } = require("../controllers/main");
 
@@ -15,15 +15,15 @@ router.get("/", productController.getProducts);
 router.get("/:id", productController.getProduct);
 
 //Create and respond with the new product
-router.post("/", authenticateJwt, roleAuth, productController.createNewProduct);
+router.post("/", allowIfLoggedIn, roleAuth, productController.createNewProduct);
 
 //Update the product details and respond with the updated object
-router.put("/:id", authenticateJwt, roleAuth, productController.updateProduct);
+router.put("/:id", allowIfLoggedIn, roleAuth, productController.updateProduct);
 
 //Delete a product and respond with the deleted product
 router.delete(
   "/:id",
-  authenticateJwt,
+  allowIfLoggedIn,
   roleAuth,
   productController.deleteProduct
 );

@@ -1,19 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const { cartController } = require("../controllers/main");
-
-const authenticateJwt = require("../middleware/auth");
+const { allowIfLoggedIn } = require("../middleware/auth");
 
 //Get items in the cart
-router.get("/", authenticateJwt, cartController.getCartItems);
+router.get("/", allowIfLoggedIn, cartController.getCartItems);
 
 //Create cart if not available & update quantity of the product
-router.post("/", authenticateJwt, cartController.createCart);
+router.post("/", allowIfLoggedIn, cartController.createCart);
 
 //remove a product from the cart
-router.put("/", authenticateJwt, cartController.removeProdFromCart);
+router.put("/", allowIfLoggedIn, cartController.removeProdFromCart);
 
 //empty cart
-router.delete("/", authenticateJwt, cartController.emptyCart);
+router.delete("/", allowIfLoggedIn, cartController.emptyCart);
 
 module.exports = router;

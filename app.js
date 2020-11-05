@@ -11,6 +11,7 @@ const reviews = require("./routes/review");
 const address = require("./routes/address");
 const stripe = require("./routes/payment");
 const errorHandler = require("./middleware/error");
+const { authenticateJwt } = require("./middleware/auth");
 
 mongoose
   .connect(MONGO_URL, {
@@ -27,6 +28,10 @@ mongoose
   });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(authenticateJwt);
+
 app.use("/api/users", userRouter);
 app.use("/api/cart", cart);
 app.use("/api/products", products);

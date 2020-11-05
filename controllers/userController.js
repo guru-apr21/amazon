@@ -62,10 +62,11 @@ const findUserById = async (id) => {
  */
 const createUser = async (req, res, next) => {
   try {
-    const { password, firstName, lastName, email, admin } = req.body;
+    console.log("I am here");
+    const { password, firstName, lastName, email, role } = req.body;
 
-    const duplicate = await User.findOne({ email });
-    if (duplicate)
+    const userExist = await User.findOne({ email });
+    if (userExist)
       return res.status(400).json({ error: "User already exists" });
 
     const passwordHash = await hashPassword(password);
@@ -76,17 +77,18 @@ const createUser = async (req, res, next) => {
       name,
     });
 
-    const user = new User({
+    const newUser = new User({
       passwordHash,
       firstName,
       lastName,
       email,
-      admin,
+      role: role || "buyer",
       stripeCustomerId: customer.id,
     });
-    await user.save();
-    const token = user.genAuthToken();
-    res.json({ token });
+    const accessToken = newUser.genAuthToken();
+    newUser.accessToken = accessToken;
+    await newUser.save();
+    res.json({ data: newUser, accessToken });
   } catch (error) {
     next(error);
   }
@@ -113,8 +115,9 @@ const loginUser = async (req, res) => {
     const match = await comparePassword(password, user.passwordHash);
     if (!match) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = user.genAuthToken();
-    res.json({ token });
+    const accessToken = user.genAuthToken();
+    await User.findByIdAndUpdate(user._id, { accessToken });
+    res.json({ data: { email: user.email, role: user.role }, accessToken });
   } catch (error) {
     console.log(error);
     res.status(500).json("Something went wrong");
@@ -145,7 +148,7 @@ const changePassword = async (req, res, next) => {
     newPassword = await hashPassword(newPassword);
     user.passwordHash = newPassword;
     await user.save();
-    res.status(204).end();
+    res.json({ message: "Password changed successfully!" });
   } catch (error) {
     next(error);
   }

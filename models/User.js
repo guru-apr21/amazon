@@ -7,8 +7,13 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  admin: { type: Boolean, default: false },
   stripeCustomerId: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ["buyer", "seller", "superAdmin"],
+    default: "buyer",
+  },
+  accessToken: String,
   avatar: String,
 });
 
@@ -17,21 +22,17 @@ userSchema.set("toJSON", {
     returnedObject._id = returnedObject._id.toString();
     delete returnedObject.passwordHash;
     delete returnedObject.__v;
-    delete returnedObject.role;
   },
 });
 
 userSchema.methods.genAuthToken = function () {
   return jwt.sign(
     {
-      _id: this._id,
-      email: this.email,
-      admin: this.admin,
-      stripeCustomerId: this.stripeCustomerId,
+      userId: this._id,
     },
     jwtPrivateKey,
     {
-      expiresIn: "48h",
+      expiresIn: "1d",
     }
   );
 };

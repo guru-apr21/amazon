@@ -1,14 +1,14 @@
 const router = require("express").Router();
-const authenticateJwt = require("../middleware/auth");
 const { addressController } = require("../controllers/main");
+const { allowIfLoggedIn } = require("../middleware/auth");
 
 //Get addresses of a given userId
-router.get("/", authenticateJwt, addressController.getUserAddresses);
+router.get("/", allowIfLoggedIn, addressController.getUserAddresses);
 
 //Create new Address
-router.post("/", authenticateJwt, addressController.createNewAddress);
+router.post("/", allowIfLoggedIn, addressController.createNewAddress);
 
 //Delete address by id
-router.delete("/", authenticateJwt, addressController.deleteAddressById);
+router.delete("/", allowIfLoggedIn, addressController.deleteAddressById);
 
 module.exports = router;
