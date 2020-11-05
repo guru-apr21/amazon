@@ -59,7 +59,7 @@ const createNewProduct = async (req, res, next) => {
   try {
     const { ...newProduct } = req.body;
 
-    let product = new Product(newProduct);
+    let product = new Product({ ...newProduct, user: req.user._id });
 
     let category = await findCategoryById(newProduct.categoryId);
     if (!category) return res.status(404).json("Category not found!");
@@ -90,10 +90,13 @@ const updateProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     const updateObj = req.body;
-    const product = await Product.findByIdAndUpdate(id, updateObj, {
-      new: true,
-    });
+    let product = await Product.findById(id);
     if (!product) return res.status(404).json("Product not found");
+    if (req.user.role !== "superAdmin") {
+      if (product.user !== req.user._id)
+        return res.status(401).json({ error: "Access Denied" });
+    }
+    product = await Product.findByIdAndDelete(id, updateObj, { new: true });
     res.json(product);
   } catch (error) {
     next(error);
@@ -113,8 +116,13 @@ const updateProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const product = await Product.findByIdAndDelete(id).populate("categoryId");
-    if (!product) return res.status(404).json("Product not found!");
+    let product = await Product.findById(id);
+    if (!product) return res.status(404).json("Product not found");
+    if (req.user.role !== "superAdmin") {
+      if (product.user !== req.user._id)
+        return res.status(401).json({ error: "Access Denied" });
+    }
+    product = await Product.findByIdAndDelete(id).populate("categoryId");
 
     let { products, _id } = product.categoryId;
     products = products.filter((p) => String(p) !== id);
@@ -142,7 +150,15 @@ const uploadProductImages = async (req, res, next) => {
   try {
     const images = await uploadToS3(req.files, "productImages");
     const productId = req.body.productId;
-    const product = await Product.findByIdAndUpdate(
+
+    let product = await Product.findById(productId);
+    if (!product) return res.status(404).json("Product not found");
+    if (req.user.role !== "superAdmin") {
+      if (product.user !== req.user._id)
+        return res.status(401).json({ error: "Access Denied" });
+    }
+
+    product = await Product.findByIdAndUpdate(
       productId,
       { images: images },
       { new: true }

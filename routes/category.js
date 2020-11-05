@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const roleAuth = require("../middleware/role");
+const { seller, superAdmin } = require("../middleware/role");
 const { allowIfLoggedIn } = require("../middleware/auth");
 const { categoryController } = require("../controllers/main");
 
@@ -11,7 +11,7 @@ router.get("/", categoryController.getAllCategory);
 router.post(
   "/",
   allowIfLoggedIn,
-  roleAuth,
+  superAdmin,
   categoryController.createNewCategory
 );
 
@@ -20,7 +20,7 @@ products and respond with the updated category*/
 router.put(
   "/:id",
   allowIfLoggedIn,
-  roleAuth,
+  superAdmin,
   categoryController.updateCategory
 );
 
@@ -29,7 +29,7 @@ the database and respond with the deleted category*/
 router.delete(
   "/:id",
   allowIfLoggedIn,
-  roleAuth,
+  superAdmin,
   categoryController.delCategory
 );
 

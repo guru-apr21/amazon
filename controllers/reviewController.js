@@ -82,7 +82,10 @@ const deleteReview = async (req, res) => {
     const review = await Review.findById(id);
     if (!review) return res.status(404).json("No review with the given id");
 
-    if (String(review.user) !== user) return res.status(403).end();
+    if (req.user.role !== "superAdmin") {
+      if (String(review.user) !== user)
+        return res.status(403).json({ error: "Access denied!" });
+    }
 
     const reviewedProduct = await Product.findById(review.product);
     reviewedProduct.reviews = reviewedProduct.reviews.filter(

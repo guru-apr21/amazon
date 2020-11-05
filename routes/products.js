@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const roleAuth = require("../middleware/role");
 const { allowIfLoggedIn } = require("../middleware/auth");
-
+const { seller } = require("../middleware/role");
 const { productController } = require("../controllers/main");
 
 const multer = require("multer");
@@ -15,19 +14,19 @@ router.get("/", productController.getProducts);
 router.get("/:id", productController.getProduct);
 
 //Create and respond with the new product
-router.post("/", allowIfLoggedIn, roleAuth, productController.createNewProduct);
+router.post("/", allowIfLoggedIn, seller, productController.createNewProduct);
 
 //Update the product details and respond with the updated object
-router.put("/:id", allowIfLoggedIn, roleAuth, productController.updateProduct);
+router.put("/:id", allowIfLoggedIn, seller, productController.updateProduct);
 
 //Delete a product and respond with the deleted product
-router.delete(
-  "/:id",
-  allowIfLoggedIn,
-  roleAuth,
-  productController.deleteProduct
-);
+router.delete("/:id", allowIfLoggedIn, seller, productController.deleteProduct);
 
-router.post("/upload-images", upload, productController.uploadProductImages);
+router.post(
+  "/upload-images",
+  upload,
+  seller,
+  productController.uploadProductImages
+);
 
 module.exports = router;

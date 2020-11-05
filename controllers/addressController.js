@@ -65,8 +65,12 @@ const createNewAddress = async (req, res, next) => {
 const deleteAddressById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const address = await Address.findByIdAndDelete(id);
+    const address = await Address.findById(id);
     if (!address) return res.status(404).json("No address with the given id");
+    if (req.user.role !== "superAdmin") {
+      if (address.user !== req.user._id)
+        return res.status(401).json("Access denied");
+    }
     res.status(204).end();
   } catch (error) {
     next(error);
