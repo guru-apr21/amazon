@@ -9,7 +9,10 @@ const Category = require("../models/Category");
  */
 const getAllCategory = async (req, res, next) => {
   try {
-    let category = await Category.find().populate("products");
+    const title = req.query.title || "";
+    let category = await Category.find({
+      title: { $regex: title, $options: "i" },
+    }).populate("products");
     res.json(category);
   } catch (error) {
     next(error);
