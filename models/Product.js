@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String, required: true },
   price: { type: Number, required: true },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  brand: { type: String, required: true, unique: true },
+  brand: { type: String, required: true },
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
   images: [{ type: String }],
 });
@@ -16,6 +16,8 @@ productSchema.set("toJSON", {
     delete returnedObject.__v;
   },
 });
+
+productSchema.index({ title: "text", description: "text" });
 
 const Product = mongoose.model("Product", productSchema);
 module.exports = Product;
