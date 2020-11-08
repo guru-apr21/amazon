@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const joi = require('joi');
 const { jwtPrivateKey } = require('../utils/config');
 
 const userSchema = new mongoose.Schema({
@@ -37,5 +38,19 @@ userSchema.methods.genAuthToken = function jwtSign() {
   );
 };
 
+const validateUser = (value) => {
+  const schema = joi.object({
+    firstName: joi.string().required(),
+    lastName: joi.string().required(),
+    email: joi
+      .string()
+      .email({ minDomainSegments: 2, tlds: { allow: ['.com', '.net'] } })
+      .required(),
+    password: joi.string().required(),
+    role: joi.string().valid('buyer', 'seller', 'superAdmin'),
+  });
+  return schema.validate(value);
+};
+
 const User = mongoose.model('User', userSchema);
-module.exports = User;
+module.exports = { User, validateUser };
