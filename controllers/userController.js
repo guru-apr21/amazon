@@ -1,4 +1,9 @@
-const { User, validateSignUp } = require('../models/User');
+const {
+  User,
+  validateSignUp,
+  validateSignIn,
+  validateChangePwd,
+} = require('../models/User');
 const { hashPassword, comparePassword } = require('../services/bcrypt');
 const { stripe } = require('../utils/config');
 const { uploadToS3, S3 } = require('../services/file_upload');
@@ -58,7 +63,7 @@ const createUser = async (req, res, next) => {
   try {
     const { password, firstName, lastName, email, role } = req.body;
 
-    const { error } = validateUserSignup(req.body);
+    const { error } = validateSignUp(req.body);
     if (error) {
       return res.status(400).json({
         error: error.details[0].message,
@@ -108,6 +113,11 @@ const createUser = async (req, res, next) => {
  */
 const loginUser = async (req, res, next) => {
   try {
+    const { error } = validateSignIn(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
     const { email, password } = req.body;
 
     const user = await findUserByEmailId(email);
@@ -138,8 +148,13 @@ const loginUser = async (req, res, next) => {
  */
 const changePassword = async (req, res, next) => {
   try {
+    const { error } = validateChangePwd(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
     const { email } = req.user;
-    const password = { req };
+    const { password } = req.body;
     let { newPassword } = req.body;
     const user = await findUserByEmailId(email);
     if (!user) return res.status(404).json('User not found');

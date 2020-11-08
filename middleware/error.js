@@ -1,7 +1,8 @@
 module.exports = (err, req, res) => {
+  console.log('I am ');
   console.log(err.type);
   console.log(err);
-  switch (err.type || err.status || err.name) {
+  switch (err.name || err.type || err.status) {
     case 'TokenExpiredError':
       res.status(400).json('Token expired login to continue');
       break;

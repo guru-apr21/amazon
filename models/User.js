@@ -52,5 +52,24 @@ const validateSignUp = (value) => {
   return schema.validate(value);
 };
 
+const validateSignIn = (value) => {
+  const schema = joi.object({
+    email: joi
+      .string()
+      .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
+      .required(),
+    password: joi.string().required(),
+  });
+  return schema.validate(value);
+};
+
+const validateChangePwd = (value) => {
+  const schema = joi.object({
+    password: joi.string().required(),
+    newPassword: joi.string().required(),
+  });
+  return schema.validate(value);
+};
+
 const User = mongoose.model('User', userSchema);
-module.exports = { User, validateSignUp };
+module.exports = { User, validateSignUp, validateSignIn, validateChangePwd };
