@@ -1,4 +1,4 @@
-const { User } = require('../models/User');
+const { User, validateSignUp } = require('../models/User');
 const { hashPassword, comparePassword } = require('../services/bcrypt');
 const { stripe } = require('../utils/config');
 const { uploadToS3, S3 } = require('../services/file_upload');
@@ -57,6 +57,13 @@ const findUserById = async (id) => {
 const createUser = async (req, res, next) => {
   try {
     const { password, firstName, lastName, email, role } = req.body;
+
+    const { error } = validateUserSignup(req.body);
+    if (error) {
+      return res.status(400).json({
+        error: error.details[0].message,
+      });
+    }
 
     const userExist = await User.findOne({ email });
     if (userExist) {

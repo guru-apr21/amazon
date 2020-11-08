@@ -38,13 +38,13 @@ userSchema.methods.genAuthToken = function jwtSign() {
   );
 };
 
-const validateUser = (value) => {
+const validateSignUp = (value) => {
   const schema = joi.object({
     firstName: joi.string().required(),
     lastName: joi.string().required(),
     email: joi
       .string()
-      .email({ minDomainSegments: 2, tlds: { allow: ['.com', '.net'] } })
+      .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
       .required(),
     password: joi.string().required(),
     role: joi.string().valid('buyer', 'seller', 'superAdmin'),
@@ -53,4 +53,4 @@ const validateUser = (value) => {
 };
 
 const User = mongoose.model('User', userSchema);
-module.exports = { User, validateUser };
+module.exports = { User, validateSignUp };
