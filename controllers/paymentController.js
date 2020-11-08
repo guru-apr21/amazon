@@ -1,6 +1,6 @@
-const Order = require("../models/Order");
-const Product = require("../models/Product");
-const { stripe } = require("../utils/config");
+const Order = require('../models/Order');
+const Product = require('../models/Product');
+const { stripe } = require('../utils/config');
 
 /**
  *
@@ -22,42 +22,45 @@ const createPaymentIntent = async (req, res, next) => {
 
     const productIds = orderItems.map((p) => p.productId);
     const products = await Product.find()
-      .where("_id")
+      .where('_id')
       .in(productIds)
-      .select("price")
+      .select('price')
       .exec();
 
     let amount = 0;
 
-    console.log(typeof products[0]._id, typeof productIds[0]);
-    for (let i = 0; i < products.length; i++) {
+    for (let i = 0; i < products.length; i += 1) {
       if (productIds[i] === String(products[i]._id)) {
         amount += orderItems[i].quantity * products[i].price;
       }
     }
 
-    //Create new payment intent
+    // Create new payment intent
     const intent = await stripe.paymentIntents.create({
       amount,
-      currency: "inr",
-      confirmation_method: "manual",
-      description: "Software development services",
-      setup_future_usage: "off_session",
+      currency: 'inr',
+      confirmation_method: 'manual',
+      description: 'Software development services',
+      setup_future_usage: 'off_session',
       customer,
     });
 
-    //Create new order document and save it to DB with isPaid set to false
+    // Create new order document and save it to DB with isPaid set to false
     let order = new Order({
       orderItems,
       user: req.user._id,
       totalPrice: amount,
-      user: req.user._id,
       stripePaymentIntentId: intent.id,
     });
     order = await order.save();
 
-    if (intent.status === "requires_payment_method")
-      return res.json({ payment_intent_id: intent.id, order });
+    if (intent.status === 'requires_payment_method') {
+      return res.json({
+        payment_intent_id: intent.id,
+        order,
+        message: 'Requires payment method',
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -82,25 +85,26 @@ const createPaymentIntent = async (req, res, next) => {
  */
 const confirmPaymentIntent = async (req, res, next) => {
   try {
-    let { address, payment_method, payment_intent_id, orderId } = req.body;
+    const { address, paymentMethod, paymentIntentId, orderId } = req.body;
 
-    let intent = await stripe.paymentIntents.confirm(payment_intent_id, {
-      payment_method,
+    const intent = await stripe.paymentIntents.confirm(paymentIntentId, {
+      payment_method: paymentMethod,
     });
 
-    if (intent.status === "succeeded") {
+    if (intent.status === 'succeeded') {
       let order = await Order.findByIdAndUpdate(orderId, {
         shipping: address,
         isPaid: true,
         paidAt: Date.now(),
       });
 
-      order = await order.populate("shipping").execPopulate();
+      order = await order.populate('shipping').execPopulate();
       return res.json({ success: true, order });
-    } else if (intent.status === "requires_action") {
+    }
+    if (intent.status === 'requires_action') {
       return res.json({
         payment_intent_id: intent.id,
-        message: "Requires action",
+        message: 'Requires action',
       });
     }
   } catch (error) {
@@ -120,12 +124,12 @@ const confirmPaymentIntent = async (req, res, next) => {
  */
 const createNewPaymentMethod = async (req, res, next) => {
   try {
-    const { cardDetails } = req.body;
+    const cardDetails = req.body;
     if (Object.values(cardDetails) < 4) {
-      return res.status(400).json("Invalid card details");
+      return res.status(400).json('Invalid card details');
     }
-    let paymentMethod = await stripe.paymentMethods.create({
-      type: "card",
+    const paymentMethod = await stripe.paymentMethods.create({
+      type: 'card',
       card: cardDetails,
     });
     res.json({ payment_method_id: paymentMethod.id });
@@ -146,7 +150,7 @@ const getAllCardPaymentMethods = async (req, res, next) => {
   try {
     const paymentMethods = await stripe.paymentMethods.list({
       customer: req.user.stripeCustomerId,
-      type: "card",
+      type: 'card',
     });
     res.json(paymentMethods);
   } catch (error) {

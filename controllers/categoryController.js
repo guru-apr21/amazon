@@ -1,4 +1,4 @@
-const Category = require("../models/Category");
+const Category = require('../models/Category');
 
 /**
  *
@@ -9,10 +9,10 @@ const Category = require("../models/Category");
  */
 const getAllCategory = async (req, res, next) => {
   try {
-    const title = req.query.title || "";
-    let category = await Category.find({
-      title: { $regex: title, $options: "i" },
-    }).populate("products");
+    const title = req.query.title || '';
+    const category = await Category.find({
+      title: { $regex: title, $options: 'i' },
+    }).populate('products');
     res.json(category);
   } catch (error) {
     next(error);
@@ -28,7 +28,11 @@ const getAllCategory = async (req, res, next) => {
  */
 const createNewCategory = async (req, res, next) => {
   try {
-    const title = req.body.title;
+    const { title } = req.body;
+    const categoryExists = await Category.findOne({ title });
+    if (categoryExists) {
+      return res.status(400).json({ error: 'Category already exists' });
+    }
     let category = new Category({ title });
     category = await category.save();
     res.status(201).json(category);
@@ -57,12 +61,12 @@ const findCategoryById = async (id) => {
  */
 const updateCategory = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const updateObj = req.body;
     const category = await Category.findByIdAndUpdate(id, updateObj, {
       new: true,
     });
-    if (!category) return res.status(404).json("Category not found");
+    if (!category) return res.status(404).json('Category not found');
     res.json(category);
   } catch (error) {
     next(error);
@@ -79,9 +83,9 @@ const updateCategory = async (req, res, next) => {
  */
 const delCategory = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const category = await Category.findByIdAndDelete(id);
-    if (!category) return res.status(404).json("Category not found");
+    if (!category) return res.status(404).json('Category not found');
     res.status(204).end();
   } catch (error) {
     next(error);

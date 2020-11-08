@@ -1,7 +1,7 @@
-const User = require("../models/User");
-const { hashPassword, comparePassword } = require("../services/bcrypt");
-const { stripe } = require("../utils/config");
-const { uploadToS3, S3 } = require("../services/file_upload");
+const User = require('../models/User');
+const { hashPassword, comparePassword } = require('../services/bcrypt');
+const { stripe } = require('../utils/config');
+const { uploadToS3, S3 } = require('../services/file_upload');
 
 /**
  *
@@ -10,13 +10,12 @@ const { uploadToS3, S3 } = require("../services/file_upload");
  *
  * @returns {Array} users array
  */
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find({});
     res.json(users);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -26,13 +25,8 @@ const getAllUsers = async (req, res) => {
  * @returns {Object} user object
  */
 const findUserByEmailId = async (email) => {
-  try {
-    const user = await User.findOne({ email });
-    return user;
-  } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
-  }
+  const user = await User.findOne({ email });
+  return user;
 };
 
 /**
@@ -62,12 +56,12 @@ const findUserById = async (id) => {
  */
 const createUser = async (req, res, next) => {
   try {
-    console.log("I am here");
     const { password, firstName, lastName, email, role } = req.body;
 
     const userExist = await User.findOne({ email });
-    if (userExist)
-      return res.status(400).json({ error: "User already exists" });
+    if (userExist) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
 
     const passwordHash = await hashPassword(password);
 
@@ -82,7 +76,7 @@ const createUser = async (req, res, next) => {
       firstName,
       lastName,
       email,
-      role: role || "buyer",
+      role: role || 'buyer',
       stripeCustomerId: customer.id,
     });
     const accessToken = newUser.genAuthToken();
@@ -105,22 +99,21 @@ const createUser = async (req, res, next) => {
  *
  * Login exisiting user in the database
  */
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     const user = await findUserByEmailId(email);
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
     const match = await comparePassword(password, user.passwordHash);
-    if (!match) return res.status(400).json({ error: "Invalid credentials" });
+    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
 
     const accessToken = user.genAuthToken();
     await User.findByIdAndUpdate(user._id, { accessToken });
     res.json({ data: { email: user.email, role: user.role }, accessToken });
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 
@@ -139,52 +132,53 @@ const loginUser = async (req, res) => {
 const changePassword = async (req, res, next) => {
   try {
     const { email } = req.user;
-    let { password, newPassword } = req.body;
-    let user = await findUserByEmailId(email);
-    if (!user) return res.status(404).json("User not found");
+    const password = { req };
+    let { newPassword } = req.body;
+    const user = await findUserByEmailId(email);
+    if (!user) return res.status(404).json('User not found');
 
     const match = await comparePassword(password, user.passwordHash);
-    if (!match) return res.status(204).json("Invalid Credentials");
+    if (!match) return res.status(400).json('Invalid Credentials');
     newPassword = await hashPassword(newPassword);
     user.passwordHash = newPassword;
     await user.save();
-    res.json({ message: "Password changed successfully!" });
+    res.json({ message: 'Password changed successfully!' });
   } catch (error) {
     next(error);
   }
 };
 
-//Used to upload and change the avatar picture
+// Used to upload and change the avatar picture
 const uploadAvatar = async (req, res, next) => {
   try {
-    const data = await uploadToS3(req.file, "userAvatars");
-    let user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        avatar: data,
-      },
-      { new: true }
-    );
+    const user = await User.findById(req.user._id);
+    if (user) {
+      return res.status(404).json({ error: 'No user with the given id' });
+    }
+    user.avatar = await uploadToS3(req.file, 'userAvatars');
     return res.json(user);
   } catch (err) {
-    console.log("Error occured while trying to upload to S3 bucket", err);
+    next(err);
   }
 };
 
-//Used to delete a avatar picture
+// Used to delete a avatar picture
 const deleteAvatar = async (req, res, next) => {
   try {
-    const data = await S3.deleteObject({
-      Bucket: "guru-s3demo",
+    const user = await User.findById(req.user._id);
+    if (user) {
+      return res.status(404).json({ error: 'No user with the given id' });
+    }
+    await S3.deleteObject({
+      Bucket: 'guru-s3demo',
       Key: `userAvatars/${req.user._id}.JPG`,
     }).promise();
-    console.log(data);
-    const user = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       req.user._id,
       { $unset: { avatar: 1 } },
       { new: true }
     );
-    return res.json(user);
+    return res.status(204).end();
   } catch (error) {
     next(error);
   }

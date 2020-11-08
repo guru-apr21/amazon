@@ -1,18 +1,20 @@
-module.exports = (err, req, res, next) => {
+module.exports = (err, req, res) => {
   console.log(err.type);
   console.log(err);
   switch (err.type || err.status || err.name) {
-    case "StripeCardError":
+    case 'TokenExpiredError':
+      res.status(400).json('Token expired login to continue');
+      break;
+    case 'StripeCardError':
       res.status(err.statusCode).json(err.message);
       break;
-    case "StripeInvalidRequestError":
+    case 'StripeInvalidRequestError':
       res.status(err.statusCode).json(err.message);
       break;
     case 200:
       res.status(200).json(err.message);
       break;
     case 204:
-      console.log("hello");
       res.status(204).end();
       break;
     case 404:
@@ -21,11 +23,11 @@ module.exports = (err, req, res, next) => {
     case 400:
       res.status(400).json(err.message);
       break;
-    case "CastError":
+    case 'CastError':
       res.status(400).json(err.message);
       break;
     default:
-      res.status(500).json("Something went wrong");
+      res.status(500).json('Something went wrong');
       break;
   }
 };

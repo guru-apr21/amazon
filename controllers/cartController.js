@@ -1,7 +1,7 @@
-const Cart = require("../models/Cart");
+const Cart = require('../models/Cart');
 
 const findCartByUserId = async (id) => {
-  const cart = await Cart.findOne({ userId: id }).populate("userId");
+  const cart = await Cart.findOne({ userId: id }).populate('userId');
   return cart;
 };
 
@@ -47,7 +47,7 @@ const createCart = async (req, res, next) => {
     const { _id: userId } = req.user;
     const { productId, quantity, title, price } = req.body;
 
-    let cart = await Cart.findOne({ userId: userId }).populate("userId");
+    let cart = await Cart.findOne({ userId }).populate('userId');
 
     if (cart) {
       const itemIndex = cart.products.findIndex(
@@ -79,7 +79,7 @@ const createCart = async (req, res, next) => {
         products: [{ productId, quantity, title, price }],
       });
       cart = await cart.save();
-      cart.populate("userId").execPopulate();
+      cart.populate('userId').execPopulate();
       res.status(201).json(cart);
     }
   } catch (err) {
@@ -102,7 +102,7 @@ const createCart = async (req, res, next) => {
 
 const removeProdFromCart = async (req, res, next) => {
   try {
-    const productId = req.body.id;
+    const productId = req.params.id;
     const userId = req.user._id;
 
     let cart = await findCartByUserId(userId);
@@ -128,13 +128,14 @@ const removeProdFromCart = async (req, res, next) => {
 const emptyCart = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    let cart = await findCartByUserId(userId);
+    const cart = await findCartByUserId(userId);
 
-    if (!cart || cart.products.length < 1)
-      return res.status(400).json("Cart is empty already");
+    if (!cart || cart.products.length < 1) {
+      return res.status(400).json('Cart is empty already');
+    }
 
     cart.products = [];
-    cart = await cart.save();
+    await cart.save();
     res.status(204).end();
   } catch (err) {
     next(err);

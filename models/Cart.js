@@ -1,15 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const productSchema = {
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   quantity: { type: Number, default: 1 },
   price: Number,
-  title: "String",
+  title: 'String',
 };
 
 const cartSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     products: [productSchema],
     active: { type: Boolean, default: true },
     modifiedOn: {
@@ -20,4 +20,4 @@ const cartSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Cart", cartSchema);
+module.exports = mongoose.model('Cart', cartSchema);

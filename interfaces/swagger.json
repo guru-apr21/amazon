@@ -1,0 +1,1693 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Amazon clone",
+        "description": "A simple ecommerce application where you can add products to the cart and make payment through stripe API.",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "email": "guruprakash@optisolbusiness.com"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3001/api"
+        }
+    ],
+    "tags": [
+        {
+            "name": "user",
+            "description": "Operations about user"
+        },
+        {
+            "name": "cart",
+            "description": "CRUD Operations on cart"
+        },
+        {
+            "name": "products",
+            "description": "Everything about products"
+        },
+        {
+            "name": "category",
+            "description": "Defines category for products"
+        },
+        {
+            "name": "orders",
+            "description": "Place order for your items"
+        },
+        {
+            "name": "review",
+            "description": "Manage user review and ratings"
+        },
+        {
+            "name": "address",
+            "description": "CRUD operations on customer's address"
+        },
+        {
+            "name": "stripe",
+            "description": "Makes payment using stripe API"
+        }
+    ],
+    "paths": {
+        "/users": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get all users",
+                "description": "You need to logged in and superAdmin to access this route",
+                "responses": {
+                    "200": {
+                        "description": "Responds with all users details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "$ref": "#/components/schemas/User"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/signup": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Create new user",
+                "description": "Can be done by anyone with a valid email id.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "User created successfully!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "User with the specified email already exists!"
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "users/signin": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Login to existing user account",
+                "description": "Can be done with registered email id and password.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "User LoggedIn successfully!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid credentials!"
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/users/changepwd": {
+            "put": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Change password",
+                "description": "You need to logged in and user can change only his own password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "newPassword": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found!"
+                    },
+                    "400": {
+                        "description": "Invalid Credentials"
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/avatar": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "uploads an avatar image",
+                "description": "You need to logged in and user can change only his own avatar",
+                "operationId": "uploadFile",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "Avatar image file to upload!",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "4XX": {
+                        "description": "Error occured while trying to upload to S3 bucket"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Deletes avatar image",
+                "description": "You need to logged in and user can delete only his own avatar",
+                "responses": {
+                    "204": {
+                        "description": "Avatar deleted successfully!",
+                        "content": {}
+                    },
+                    "5XX": {
+                        "description": "Error deleting avatar from aws s3!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "/cart": {
+            "get": {
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Get items in the cart",
+                "description": "You need to be loggedin to get items in the cart",
+                "responses": {
+                    "200": {
+                        "description": "successfull operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "$ref": "#/components/schemas/Cart"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "Cart is empty"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Add products to the cart",
+                "description": "You need to be loggedin to add items in the cart",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "productId": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "format": "int32"
+                                    },
+                                    "price": {
+                                        "type": "integer",
+                                        "format": "int32"
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Items added to the cart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created new cart and items added to the cart!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                }
+                            }
+                        }
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Empty the items in the cart",
+                "description": "You need to be loggedin to empty the cart",
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "content": {}
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/cart/{productId}": {
+            "put": {
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Remove a product from the cart",
+                "description": "You need to be loggedin to remove items in the cart",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "id of the product to remove from the cart!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Removed a product from the cart!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                }
+                            }
+                        }
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/address": {
+            "get": {
+                "tags": [
+                    "address"
+                ],
+                "summary": "Get user's addresses",
+                "description": "You need to be loggedin to get address of the user!",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Address"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No address with the given id!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "address"
+                ],
+                "summary": "Creates a new address object with a given user id!",
+                "description": "You need to be loggedin to create a new address",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "line1": {
+                                        "type": "string"
+                                    },
+                                    "line2": {
+                                        "type": "string"
+                                    },
+                                    "state": {
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "type": "string"
+                                    },
+                                    "postal_code": {
+                                        "type": "string"
+                                    },
+                                    "country": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Address"
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "address"
+                ],
+                "description": "You need to be loggedin and user can only delete his own address object",
+                "summary": "Deletes a user address document",
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "content": {}
+                    },
+                    "404": {
+                        "description": "No address with the given id",
+                        "content": {}
+                    },
+                    "401": {
+                        "description": "Access denied!",
+                        "content": {}
+                    },
+                    "5XX": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get all products",
+                "description": "You need not to be logged in to view the product details!",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Text to search the products collections",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "number of product documents to be retrieved",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "fields to be sorted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Product"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "products"
+                ],
+                "summary": "Create a new product",
+                "description": "You need to be a seller or a superAdmin to access this route!",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "integer",
+                                        "format": "int32"
+                                    },
+                                    "categoryId": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    },
+                                    "brand": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category with the given id is not found!",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "/products/{productId}": {
+            "get": {
+                "tags": [
+                    "products"
+                ],
+                "description": "You need not to be logged in to view the product details!",
+                "summary": "Get product with the given Id!",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "id of the product to retrieve!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "No product with the given id",
+                        "content": {}
+                    },
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "products"
+                ],
+                "description": "You need to be a seller or a superAdmin to access this route. Returns the updated object!",
+                "summary": "Update the product details!",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "id of the product to be updated!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "integer",
+                                        "format": "int32"
+                                    },
+                                    "categoryId": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    },
+                                    "brand": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No product with the given id",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "products"
+                ],
+                "description": "You need to be a seller or a superAdmin to access this route.",
+                "summary": "Delete the product with the given id",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "id of the product to be deleted!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "No product with the given id",
+                        "content": {}
+                    },
+                    "401": {
+                        "description": "Access denied!",
+                        "content": {}
+                    },
+                    "204": {
+                        "description": "successful operation",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "product/{productId}/upload-images": {
+            "post": {
+                "tags": [
+                    "products"
+                ],
+                "summary": "Upload product images",
+                "description": "You need to logged in and superAdmin or seller to access this route",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "id of the product to be updated with images!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "format": "binary",
+                                    "type": "string",
+                                    "description": "Files to upload!"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/category": {
+            "get": {
+                "tags": [
+                    "category"
+                ],
+                "summary": "Get all Categories",
+                "description": "You need not to be logged in to view the category details!",
+                "parameters": [
+                    {
+                        "name": "title",
+                        "in": "query",
+                        "description": "Text to search the entire category collections",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Category"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "category"
+                ],
+                "summary": "Create new Category",
+                "description": "You need to be a superAdmin to access this route!",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Category already exists!",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "category/{categoryId}": {
+            "put": {
+                "tags": [
+                    "category"
+                ],
+                "summary": "Update the category details!",
+                "description": "You need to be a superAdmin to access this route!",
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "id of the category to be updated!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "404": {
+                        "description": "Category not found",
+                        "content": {}
+                    },
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "category"
+                ],
+                "summary": "Delete a category with the given id!",
+                "description": "You need to be a superAdmin to access this route!",
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "id of the category to be deleted!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "content": {},
+                        "description": "successful operation"
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "/reviews": {
+            "get": {
+                "tags": [
+                    "review"
+                ],
+                "summary": "Get reviews of all the products!",
+                "description": "You need not to be a seller or a superAdmin to access this route!",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "review"
+                ],
+                "description": "A buyer can only delete his own review.A seller and superadmin can hide reviews ",
+                "summary": "Post a new review",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "rating": {
+                                        "type": "integer",
+                                        "default": 0,
+                                        "max": 5
+                                    },
+                                    "review": {
+                                        "type": "string"
+                                    },
+                                    "product": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "updates the existing product review posted by a user!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Creates a new review document",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Review"
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "content": {},
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/reviews/{reviewId}": {
+            "delete": {
+                "tags": [
+                    "review"
+                ],
+                "description": "You need to be loggedin to access this route!",
+                "summary": "Delete the review with the given id",
+                "parameters": [
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "id of the review to be deleted!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "content": {},
+                        "description": "successful operation"
+                    },
+                    "404": {
+                        "description": "Review not found with the given id",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Access denied!",
+                        "content": {}
+                    },
+                    "5xx": {
+                        "content": {},
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "get": {
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get all orders",
+                "description": "You need to be a seller or a superAdmin to access this route!",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "content": {},
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Create a new order",
+                "description": "You need to logged in to access this route!",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "orderItems": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "format": "int32"
+                                                },
+                                                "productId": {
+                                                    "type": "integer",
+                                                    "format": "int64"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "totalPrice": {
+                                    "type": "integer",
+                                    "format": "int32"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    },
+                    "5xx": {
+                        "description": "Somethin went wrong!",
+                        "content": {}
+                    }
+                }
+            }
+        },
+        "orders/{orderId}": {
+            "delete": {
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Delete the order with the given id",
+                "description": "You need to be a superAdmin to access this route!",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "description": "id of the order to be deleted!",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "content": {}
+                    },
+                    "404": {
+                        "content": {},
+                        "description": "No order with the given id!"
+                    },
+                    "5xx": {
+                        "content": {},
+                        "description": "Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/stripe/payment-intent": {
+            "post": {
+                "tags": [
+                    "stripe"
+                ],
+                "summary": "Create new payment intent!",
+                "description": "You need to be loggedin to access this route!",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "orderItems": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "format": "int32"
+                                                },
+                                                "productId": {
+                                                    "type": "integer",
+                                                    "format": "int64"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "200":{
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "properties":{
+                                        "payment_intent_id":{
+                                            "type":"string"
+                                        },
+                                        "order":{
+                                            "$ref":"#/components/schemas/Order"
+                                        },
+                                        "message":{
+                                            "type":"string",
+                                            "default":"Requires payment method"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "5xx":{
+                        "content":{},
+                        "description":"Somethin went wrong!"
+                    }
+                }
+            }
+        },
+        "/stripe/pay":{
+            "post":{
+                "tags":["stripe"],
+                "summary":"Confirm and makes payment for the order",
+                "description":"You need to be logged in to access this route!",
+                "requestBody":{
+                    "content":{
+                        "application/json":{
+                            "schema":{
+                                "type":"object",
+                                "properties":{
+                                    "address":{
+                                        "type":"integer",
+                                        "format":"int64"
+                                    },
+                                    "payment_method":{
+                                        "type":"string"
+                                    },
+                                    "payment_intent_id":{
+                                        "type":"string"
+                                    },
+                                    "orderId":{
+                                        "type":"integer",
+                                        "format":"int64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "200":{
+                        "description":"successful operation",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "properties":{
+                                        "success":{
+                                            "type":"boolean",
+                                            "default":true
+                                        },
+                                        "order":{
+                                            "$ref":"#/components/schemas/Order"
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "5xx":{
+                        "content":{},
+                        "description":"You need to be loggedin to access this route!"
+                    }
+                }
+            }
+        },
+        "stripe/payment-method":{
+            "post":{
+                "tags":["stripe"],
+                "summary":"Creates a new card payment method",
+                "description":"You need to be loggedin to access this route!",
+                "requestBody":{
+                    "content":{
+                        "application/json":{
+                            "schema":{
+                                "type":"object",
+                                "properties":{
+                                    "number":{
+                                        "type":"string"
+                                    },
+                                    "exp_month":{
+                                        "type":"integer",
+                                        "format":"int32"
+                                    },
+                                    "exp_year":{
+                                        "type":"integer",
+                                        "format":"int32"
+                                    },
+                                    "cvc":{
+                                        "type":"string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "400":{
+                        "content":{},
+                        "description":"Invalid card details"
+                    },
+                    "200":{
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "properties":{
+                                        "payment_intent_id":{
+                                            "type":"string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "5xx":{
+                        "content":{},
+                        "description":"Somethin went wrong!"
+                    }
+                }
+            },
+            "get":{
+                "tags":["stripe"],
+                "summary":"Get all payment method for a customer",
+                "description":"You need to be loggedin to access this route!",
+                "responses":{
+                    "200":{
+                    
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "required": [
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "password",
+                    "role"
+                ],
+                "type": "object",
+                "properties": {
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "unique": true
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "description": "User's role",
+                        "enum": [
+                            "buyer",
+                            "seller",
+                            "superAdmin"
+                        ]
+                    }
+                }
+            },
+            "Cart": {
+                "required": [
+                    "products",
+                    "userId"
+                ],
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "productId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "quantity": {
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "price": {
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "modifiedOn": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Address": {
+                "required": [
+                    "user",
+                    "line1",
+                    "line2",
+                    "state",
+                    "city",
+                    "postal_code",
+                    "country"
+                ],
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "line1": {
+                        "type": "string"
+                    },
+                    "line2": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Product": {
+                "required": [
+                    "user",
+                    "title",
+                    "description",
+                    "price",
+                    "categoryId",
+                    "brand"
+                ],
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "categoryId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "brand": {
+                        "type": "string"
+                    },
+                    "reviews": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "file"
+                        }
+                    }
+                }
+            },
+            "Category": {
+                "required": [
+                    "title"
+                ],
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "unique": true
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                }
+            },
+            "Review": {
+                "required": [
+                    "user",
+                    "rating",
+                    "product"
+                ],
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "default": 0,
+                        "max": 5
+                    },
+                    "review": {
+                        "type": "string"
+                    },
+                    "product": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "Order": {
+                "required": [],
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "orderItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "quantity": {
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "productId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    },
+                    "shipping": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "stripePaymentId": {
+                        "type": "string"
+                    },
+                    "itemsPrice": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "shippingPrice": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalPrice": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "isPaid": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "paidAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "isDelivered": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Order status",
+                        "enum": [
+                            "placed",
+                            "approved",
+                            "delivered"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

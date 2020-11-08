@@ -1,29 +1,29 @@
-const router = require("express").Router();
-const { paymentController } = require("../controllers/main");
-const { allowIfLoggedIn } = require("../middleware/auth");
+const router = require('express').Router();
+const { paymentController } = require('../controllers/main');
+const { allowIfLoggedIn } = require('../middleware/auth');
 
-//Create new payment method
+// Create new payment method
 router.post(
-  "/payment-method",
+  '/payment-method',
   allowIfLoggedIn,
   paymentController.createNewPaymentMethod
 );
 
-//Get all payment methods for a given stripe customer id
+// Get all payment methods for a given stripe customer id
 router.get(
-  "/payment-method",
+  '/payment-method',
   allowIfLoggedIn,
   paymentController.getAllCardPaymentMethods
 );
 
-//Create a new payment intent
+// Create a new payment intent
 router.post(
-  "/payment-intent",
+  '/payment-intent',
   allowIfLoggedIn,
   paymentController.createPaymentIntent
 );
 
-//Confirm a payment intent by adding payment method
-router.post("/pay", allowIfLoggedIn, paymentController.confirmPaymentIntent);
+// Confirm a payment intent by adding payment method
+router.post('/pay', allowIfLoggedIn, paymentController.confirmPaymentIntent);
 
 module.exports = router;

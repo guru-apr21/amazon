@@ -1,7 +1,7 @@
-const Category = require("../models/Category");
-const Product = require("../models/Product");
-const { findCategoryById } = require("./categoryController");
-const { uploadToS3, S3 } = require("../services/file_upload");
+const Category = require('../models/Category');
+const Product = require('../models/Product');
+const { findCategoryById } = require('./categoryController');
+const { uploadToS3 } = require('../services/file_upload');
 
 /**
  *
@@ -12,20 +12,18 @@ const { uploadToS3, S3 } = require("../services/file_upload");
  */
 const getProducts = async (req, res, next) => {
   try {
-    const searchString = req.query.name || "";
+    const searchString = req.query.text || '';
     const limit = req.query.limit || 10;
-    const sortFields = req.query.sort || "price";
-    const gt = req.query.gt || 0;
-    let products = await Product.find({
+    const sortFields = req.query.sort || 'price';
+    const products = await Product.find({
       $or: [
         {
-          title: { $regex: searchString, $options: "i" },
+          title: { $regex: searchString, $options: 'i' },
         },
-        { description: { $regex: searchString, $options: "i" } },
+        { description: { $regex: searchString, $options: 'i' } },
       ],
-      price: { $gt: gt },
     })
-      .populate("categoryId")
+      .populate('categoryId')
       .limit(Number(limit))
       .sort(sortFields);
     res.json(products);
@@ -43,11 +41,11 @@ const getProducts = async (req, res, next) => {
  */
 const getProduct = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    let product = await Product.findById(id)
-      .populate("categoryId")
-      .populate("reviews");
-    if (!product) return res.status(404).send("No product with the given id");
+    const { id } = req.params;
+    const product = await Product.findById(id)
+      .populate('categoryId')
+      .populate('reviews');
+    if (!product) return res.status(404).send('No product with the given id');
     res.json(product);
   } catch (error) {
     next(error);
@@ -74,14 +72,16 @@ const createNewProduct = async (req, res, next) => {
 
     let product = new Product({ ...newProduct, user: req.user._id });
 
-    let category = await findCategoryById(newProduct.categoryId);
-    if (!category) return res.status(404).json("Category not found!");
-    const products = [...category.products, product._id]; //Array of productId's belonging to a category
+    const category = await findCategoryById(newProduct.categoryId);
+    if (!category) return res.status(404).json('Category not found!');
+
+    // Array of productId's belonging to a category
+    const products = [...category.products, product._id];
     category.products = products;
 
     await category.save();
     product = await product.save();
-    product = await product.populate("categoryId").execPopulate();
+    product = await product.populate('categoryId').execPopulate();
 
     res.status(201).json(product);
   } catch (error) {
@@ -101,13 +101,14 @@ const createNewProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const updateObj = req.body;
     let product = await Product.findById(id);
-    if (!product) return res.status(404).json("Product not found");
-    if (req.user.role !== "superAdmin") {
-      if (product.user !== req.user._id)
-        return res.status(401).json({ error: "Access Denied" });
+    if (!product) return res.status(404).json('Product not found');
+    if (req.user.role !== 'superAdmin') {
+      if (product.user !== req.user._id) {
+        return res.status(401).json({ error: 'Access Denied' });
+      }
     }
     product = await Product.findByIdAndDelete(id, updateObj, { new: true });
     res.json(product);
@@ -128,16 +129,18 @@ const updateProduct = async (req, res, next) => {
  */
 const deleteProduct = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params.id;
     let product = await Product.findById(id);
-    if (!product) return res.status(404).json("Product not found");
-    if (req.user.role !== "superAdmin") {
-      if (product.user !== req.user._id)
-        return res.status(401).json({ error: "Access Denied" });
+    if (!product) return res.status(404).json('Product not found');
+    if (req.user.role !== 'superAdmin') {
+      if (product.user !== req.user._id) {
+        return res.status(401).json({ error: 'Access Denied' });
+      }
     }
-    product = await Product.findByIdAndDelete(id).populate("categoryId");
+    product = await Product.findByIdAndDelete(id).populate('categoryId');
 
-    let { products, _id } = product.categoryId;
+    let { products } = product.categoryId;
+    const { _id } = product.categoryId;
     products = products.filter((p) => String(p) !== id);
 
     await Category.findByIdAndUpdate(_id, { products });
@@ -161,31 +164,21 @@ const deleteProduct = async (req, res, next) => {
 
 const uploadProductImages = async (req, res, next) => {
   try {
-    const images = await uploadToS3(req.files, "productImages");
-    const productId = req.body.productId;
-
+    const productId = req.params.id;
     let product = await Product.findById(productId);
-    if (!product) return res.status(404).json("Product not found");
-    if (req.user.role !== "superAdmin") {
-      if (product.user !== req.user._id)
-        return res.status(401).json({ error: "Access Denied" });
+    if (!product) return res.status(404).json('Product not found');
+    if (req.user.role !== 'superAdmin') {
+      if (product.user !== req.user._id) {
+        return res.status(401).json({ error: 'Access Denied' });
+      }
     }
+    const images = await uploadToS3(req.files, 'productImages');
 
     product = await Product.findByIdAndUpdate(
       productId,
-      { images: images },
+      { images },
       { new: true }
     );
-    if (!product) {
-      const Objects = images.map((url) => {
-        return { Key: url };
-      });
-      await S3.deleteObjects({
-        Bucket: "guru-s3demo",
-        Delete: { Objects: Objects },
-      }).promise();
-      return res.status(404).json("No product with the given id");
-    }
     res.json(product);
   } catch (error) {
     next(error);

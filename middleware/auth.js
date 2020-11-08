@@ -1,21 +1,16 @@
-const jwt = require("jsonwebtoken");
-const { jwtPrivateKey } = require("../utils/config");
-const User = require("../models/User");
+const jwt = require('jsonwebtoken');
+const { jwtPrivateKey } = require('../utils/config');
+const User = require('../models/User');
 
 const authenticateJwt = async (req, res, next) => {
-  if (req.headers["x-access-token"]) {
-    const accessToken = req.headers["x-access-token"];
+  if (req.headers['x-access-token']) {
+    const accessToken = req.headers['x-access-token'];
     try {
-      const { exp, userId } = jwt.verify(accessToken, jwtPrivateKey);
-      if (exp < Date.now().valueOf() / 1000)
-        return res.status(401).json({
-          error: "JWT token has expired, please login to obtain a new one!",
-        });
+      const { userId } = jwt.verify(accessToken, jwtPrivateKey);
       res.locals.loggedInUser = await User.findById(userId);
       next();
     } catch (err) {
-      console.log(err);
-      res.status(403).end();
+      next(err);
     }
   } else {
     next();
@@ -25,10 +20,11 @@ const authenticateJwt = async (req, res, next) => {
 const allowIfLoggedIn = async (req, res, next) => {
   try {
     const user = res.locals.loggedInUser;
-    if (!user)
+    if (!user) {
       return res
         .status(401)
-        .json({ error: "You need to be logged in to access this route" });
+        .json({ error: 'You need to be logged in to access this route' });
+    }
     req.user = user;
     next();
   } catch (err) {

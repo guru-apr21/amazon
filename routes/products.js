@@ -1,31 +1,33 @@
-const express = require("express");
+const express = require('express');
+const multer = require('multer');
+
 const router = express.Router();
-const { allowIfLoggedIn } = require("../middleware/auth");
-const { seller } = require("../middleware/role");
-const { productController } = require("../controllers/main");
+const { allowIfLoggedIn } = require('../middleware/auth');
+const { seller } = require('../middleware/role');
+const { productController } = require('../controllers/main');
 
-const multer = require("multer");
-const upload = multer({ dest: "temp/" }).array("products", 4);
+const upload = multer({ dest: 'temp/' }).array('products', 4);
 
-//Respond with all available products
-router.get("/", productController.getProducts);
+// Respond with all available products
+router.get('/', productController.getProducts);
 
-//Respond with the product of given id in params
-router.get("/:id", productController.getProduct);
+// Respond with the product of given id in params
+router.get('/:id', productController.getProduct);
 
-//Create and respond with the new product
-router.post("/", allowIfLoggedIn, seller, productController.createNewProduct);
+// Create and respond with the new product
+router.post('/', allowIfLoggedIn, seller, productController.createNewProduct);
 
-//Update the product details and respond with the updated object
-router.put("/:id", allowIfLoggedIn, seller, productController.updateProduct);
+// Update the product details and respond with the updated object
+router.put('/:id', allowIfLoggedIn, seller, productController.updateProduct);
 
-//Delete a product and respond with the deleted product
-router.delete("/:id", allowIfLoggedIn, seller, productController.deleteProduct);
+// Delete a product and respond with the deleted product
+router.delete('/:id', allowIfLoggedIn, seller, productController.deleteProduct);
 
 router.post(
-  "/upload-images",
-  upload,
+  '/:id/upload-images',
+  allowIfLoggedIn,
   seller,
+  upload,
   productController.uploadProductImages
 );
 

@@ -1,6 +1,6 @@
-require("dotenv").config();
+require('dotenv').config();
 const STRIPE_ACCESS_KEY = process.env.STRIPE_ACCESS_KEY;
-const stripe = require("stripe")(STRIPE_ACCESS_KEY);
+const stripe = require('stripe')(STRIPE_ACCESS_KEY);
 
 const PORT = process.env.PORT;
 let MONGO_URL = process.env.MONGO_URL;
@@ -11,7 +11,7 @@ const CLOUD_FRONT_URL = process.env.CLOUD_FRONT_URL;
 const REGION = process.env.REGION;
 const BUCKET_NAME = process.env.BUCKET_NAME;
 
-if (process.env.NODE_ENV === "test") MONGO_URL = process.env.TEST_MONGO_URL;
+if (process.env.NODE_ENV === 'test') MONGO_URL = process.env.TEST_MONGO_URL;
 module.exports = {
   PORT,
   MONGO_URL,

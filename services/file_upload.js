@@ -1,5 +1,7 @@
-const { v1: uuidv1 } = require("uuid");
-const aws = require("aws-sdk");
+/* eslint-disable implicit-arrow-linebreak */
+const { v1: uuidv1 } = require('uuid');
+const aws = require('aws-sdk');
+const fs = require('fs');
 
 const {
   SECRET_ACCESS_KEY,
@@ -7,8 +9,7 @@ const {
   CLOUD_FRONT_URL,
   REGION,
   BUCKET_NAME,
-} = require("../utils/config");
-const fs = require("fs");
+} = require('../utils/config');
 
 aws.config.setPromisesDependency();
 aws.config.update({
@@ -19,31 +20,29 @@ aws.config.update({
 
 const S3 = new aws.S3();
 
-const getParams = (folderName, file) => {
-  return {
-    ACL: "public-read",
-    Bucket: BUCKET_NAME,
-    Body: fs.createReadStream(file.path),
-    Key: `${folderName}/${uuidv1()}.JPG`,
-  };
-};
+const getParams = (folderName, file) => ({
+  ACL: 'public-read',
+  Bucket: BUCKET_NAME,
+  Body: fs.createReadStream(file.path),
+  Key: `${folderName}/${uuidv1()}.JPG`,
+});
 
 const upload = (params, cb) => S3.upload(params, cb);
 
-const uploadToS3 = (files, folderName) => {
-  return new Promise((resolve, reject) => {
+const uploadToS3 = (files, folderName) =>
+  new Promise((resolve, reject) => {
     const keysArray = [];
     if (Array.isArray(files)) {
-      for (let item of files) {
-        const params = getParams(folderName, item);
+      for (let i = 0; i < files.length; i += 1) {
+        const params = getParams(folderName, files[i]);
         upload(params, (err, data) => {
           if (err) {
-            console.log("Error uploading files", err);
+            console.log('Error uploading files', err);
             reject(err);
           }
 
           if (data) {
-            fs.unlinkSync(item.path);
+            fs.unlinkSync(files[i].path);
             keysArray.push(`${CLOUD_FRONT_URL}/${data.Key}`);
             if (files.length === keysArray.length) {
               resolve(keysArray);
@@ -52,11 +51,11 @@ const uploadToS3 = (files, folderName) => {
         });
       }
     } else {
-      let url = "";
+      let url = '';
       const params = getParams(folderName, files);
       upload(params, (err, data) => {
         if (err) {
-          console.log("Error uploading files", err);
+          console.log('Error uploading files', err);
           reject(err);
         }
         if (data) {
@@ -67,6 +66,5 @@ const uploadToS3 = (files, folderName) => {
       });
     }
   });
-};
 
 module.exports = { uploadToS3, S3 };

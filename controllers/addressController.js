@@ -1,4 +1,4 @@
-const Address = require("../models/Address");
+const Address = require('../models/Address');
 
 /**
  *
@@ -11,8 +11,9 @@ const Address = require("../models/Address");
 const getUserAddresses = async (req, res, next) => {
   try {
     const addresses = await Address.find({ user: req.user._id });
-    if (!addresses)
-      return res.status(404).json("No address with the given id.");
+    if (!addresses) {
+      return res.status(404).json({ message: 'No address with the given id.' });
+    }
     res.json(addresses);
   } catch (error) {
     next(error);
@@ -35,19 +36,20 @@ const getUserAddresses = async (req, res, next) => {
 
 const createNewAddress = async (req, res, next) => {
   try {
-    const { city, country, line1, line2, postal_code, state } = req.body;
+    const { city, country, line1 } = req.body;
+    const { line2, postalCode, state } = req.body;
     let address = new Address({
       user: req.user._id,
       city,
       country,
       line1,
       line2,
-      postal_code,
+      postalCode,
       state,
     });
 
     address = await address.save();
-    return res.json(address);
+    return res.status(201).json(address);
   } catch (error) {
     next(error);
   }
@@ -64,12 +66,13 @@ const createNewAddress = async (req, res, next) => {
  */
 const deleteAddressById = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const address = await Address.findById(id);
-    if (!address) return res.status(404).json("No address with the given id");
-    if (req.user.role !== "superAdmin") {
-      if (address.user !== req.user._id)
-        return res.status(401).json("Access denied");
+    if (!address) return res.status(404).json('No address with the given id');
+    if (req.user.role !== 'superAdmin') {
+      if (address.user !== req.user._id) {
+        return res.status(401).json('Access denied');
+      }
     }
     res.status(204).end();
   } catch (error) {

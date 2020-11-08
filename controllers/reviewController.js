@@ -1,5 +1,5 @@
-const Product = require("../models/Product");
-const Review = require("../models/Review");
+const Product = require('../models/Product');
+const Review = require('../models/Review');
 
 /**
  *
@@ -12,9 +12,13 @@ const Review = require("../models/Review");
  * with user and product fiels populated
  *
  */
-const getAllReviews = async (req, res) => {
-  const reviews = await Review.find({}).populate("user").populate("product");
-  res.json(reviews);
+const getAllReviews = async (req, res, next) => {
+  try {
+    const reviews = await Review.find({}).populate('user').populate('product');
+    res.json(reviews);
+  } catch (err) {
+    next(err);
+  }
 };
 
 /**
@@ -36,8 +40,8 @@ const postReview = async (req, res) => {
     const { product, rating, review } = req.body;
 
     const userReview = await Review.findOne({ user, product })
-      .populate("user")
-      .populate("product");
+      .populate('user')
+      .populate('product');
 
     if (userReview) {
       userReview.rating = rating;
@@ -45,20 +49,20 @@ const postReview = async (req, res) => {
 
       await userReview.save();
       return res.status(200).json(userReview);
-    } else {
-      const newReview = new Review({ user, product, rating, review });
-
-      const reviewedProduct = await Product.findById(product);
-      reviewedProduct.reviews = [...reviewedProduct.reviews, newReview._id];
-      await reviewedProduct.save();
-
-      await newReview.save();
-      await newReview.populate("user").populate("product").execPopulate();
-      res.json({ message: "Review posted successfully!", data: newReview });
     }
+    const newReview = new Review({ user, product, rating, review });
+
+    const reviewedProduct = await Product.findById(product);
+    reviewedProduct.reviews = [...reviewedProduct.reviews, newReview._id];
+    await reviewedProduct.save();
+
+    await newReview.save();
+    await newReview.populate('user').populate('product').execPopulate();
+    res
+      .status(201)
+      .json({ message: 'Review posted successfully!', data: newReview });
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    res.status(500).json('Something went wrong');
   }
 };
 
@@ -74,17 +78,20 @@ const postReview = async (req, res) => {
  *
  * Also updates the reviews array in product documents
  */
-const deleteReview = async (req, res) => {
+const deleteReview = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params.id;
     const user = req.user._id;
 
     const review = await Review.findById(id);
-    if (!review) return res.status(404).json("No review with the given id");
+    if (!review) {
+      return res.status(404).json({ error: 'No review with the given id' });
+    }
 
-    if (req.user.role !== "superAdmin") {
-      if (String(review.user) !== user)
-        return res.status(403).json({ error: "Access denied!" });
+    if (req.user.role !== 'superAdmin') {
+      if (String(review.user) !== user) {
+        return res.status(401).json({ error: 'Access denied!' });
+      }
     }
 
     const reviewedProduct = await Product.findById(review.product);
@@ -94,10 +101,9 @@ const deleteReview = async (req, res) => {
     await reviewedProduct.save();
 
     await Review.deleteOne({ _id: id });
-    res.status(201).json("Review deleted successfully!");
+    res.status(204).end();
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Something went wrong");
+    next(error);
   }
 };
 

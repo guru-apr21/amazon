@@ -1,25 +1,28 @@
-const express = require("express");
+const express = require('express');
+const multer = require('multer');
+
 const router = express.Router();
-const { userController } = require("../controllers/main");
-const multer = require("multer");
-const upload = multer({ dest: "temp/" }).single("avatar");
-const { allowIfLoggedIn } = require("../middleware/auth");
+const { userController } = require('../controllers/main');
 
-//Respond with all available users
-router.get("/", allowIfLoggedIn, userController.getAllUsers);
+const upload = multer({ dest: 'temp/' }).single('avatar');
+const { allowIfLoggedIn } = require('../middleware/auth');
+const { superAdmin } = require('../middleware/role');
 
-//Create new user account and respond with a jwt token
-router.post("/signup", userController.createUser);
+// Respond with all available users
+router.get('/', allowIfLoggedIn, superAdmin, userController.getAllUsers);
 
-//Login to the existing account and respond with a jwt token
-router.post("/signin", userController.loginUser);
+// Create new user account and respond with a jwt token
+router.post('/signup', userController.createUser);
 
-//Change password of an existing user
-router.put("/changepwd", allowIfLoggedIn, userController.changePassword);
+// Login to the existing account and respond with a jwt token
+router.post('/signin', userController.loginUser);
 
-//Upload a avatar image
-router.post("/avatar", allowIfLoggedIn, upload, userController.uploadAvatar);
+// Change password of an existing user
+router.put('/changepwd', allowIfLoggedIn, userController.changePassword);
 
-//Delete user's existing avatar from s3 and also from db
-router.delete("/avatar", allowIfLoggedIn, userController.deleteAvatar);
+// Upload a avatar image
+router.post('/avatar', allowIfLoggedIn, upload, userController.uploadAvatar);
+
+// Delete user's existing avatar from s3 and also from db
+router.delete('/avatar', allowIfLoggedIn, userController.deleteAvatar);
 module.exports = router;

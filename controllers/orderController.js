@@ -1,4 +1,4 @@
-const Order = require("../models/Order");
+const Order = require('../models/Order');
 
 /**
  *
@@ -10,8 +10,8 @@ const Order = require("../models/Order");
 const getAllOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({})
-      .populate("user")
-      .populate({ path: "orderItems", populate: { path: "productId" } });
+      .populate('user')
+      .populate({ path: 'orderItems', populate: { path: 'productId' } });
     res.json(orders);
   } catch (error) {
     next(error);
@@ -44,10 +44,10 @@ const createOrders = async (req, res, next) => {
 
     newOrder = await newOrder.save();
     newOrder = await newOrder
-      .populate("user")
-      .populate({ path: "orderItems", populate: { path: "productId" } })
+      .populate('user')
+      .populate({ path: 'orderItems', populate: { path: 'productId' } })
       .execPopulate();
-    res.status(201).json({ messsage: "New Order Created", data: newOrder });
+    res.status(201).json({ messsage: 'New Order Created', data: newOrder });
   } catch (error) {
     next(error);
   }
@@ -63,10 +63,11 @@ const createOrders = async (req, res, next) => {
  */
 const deleteOrder = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params.id;
     const order = await Order.findByIdAndDelete(id);
-    if (!order)
-      return res.status(404).json({ message: "No order with the given id" });
+    if (!order) {
+      return res.status(404).json({ message: 'No order with the given id' });
+    }
     res.status(204).end();
   } catch (error) {
     next(error);
