@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { hashPassword, comparePassword } = require('../services/bcrypt');
 const { stripe } = require('../utils/config');
 const { uploadToS3, S3 } = require('../services/file_upload');
