@@ -59,6 +59,17 @@ const createNewAddress = async (req, res, next) => {
   }
 };
 
+/**
+ *
+ * @param {String} req.params.id
+ * @param {Object} req.body Object with fields to be updated
+ * @param {*} res
+ * @param {*} next
+ *
+ * @returns 404 if address with the given id is not found.
+ * @returns 200 if address updated successfully
+ * Updates the address document with provided fields and returns the updated document
+ */
 const updateAddress = async (req, res, next) => {
   try {
     const { id } = req.params;
