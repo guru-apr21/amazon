@@ -96,6 +96,7 @@ const confirmPaymentIntent = async (req, res, next) => {
         shipping: address,
         isPaid: true,
         paidAt: Date.now(),
+        status: 'placed',
       });
 
       order = await order.populate('shipping').execPopulate();
