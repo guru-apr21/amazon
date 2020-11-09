@@ -20,41 +20,6 @@ const getAllOrders = async (req, res, next) => {
 
 /**
  *
- * @param {Object} req.body.shipping
- * @property shipping:{address:String,city:String,postalCode:String,country:String}
- * @param {Number} req.body.itemsPrice
- * @param {Number} req.body.shippingPrice
- * @param {Number} req.body.totalPrice
- * @param {Array} req.body.orderItems
- * @property orderItems:[{quantity:Number,productId:ObjectId}]
- * @param {*} res
- *
- * @returns status 201 with new order object
- */
-
-const createOrders = async (req, res, next) => {
-  try {
-    const user = req.user._id;
-    const ordDetails = req.body;
-
-    let newOrder = new Order({
-      user,
-      ...ordDetails,
-    });
-
-    newOrder = await newOrder.save();
-    newOrder = await newOrder
-      .populate('user')
-      .populate({ path: 'orderItems', populate: { path: 'productId' } })
-      .execPopulate();
-    res.status(201).json({ messsage: 'New Order Created', data: newOrder });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- *
  * @param {ObjectId} req.params.id
  * @param {*} res
  *
@@ -74,36 +39,4 @@ const deleteOrder = async (req, res, next) => {
   }
 };
 
-// /**
-//  *
-//  * @param {ObjectID} req.params.id
-//  * @param {*} res
-//  *
-//  * @returns status 404 if order not found
-//  * @returns status 200 with order paid message and order object
-//  *
-//  * sets isPaid,paidAt,payment properties and save the order document
-//  */
-// const payForOrder = async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     let order = await Order.findById(id);
-//     if (!order) return res.status(404).json("Order Not Found");
-
-//     order.isPaid = true;
-//     order.paidAt = Date.now();
-//     order.payment = "paypal";
-//     order = await order.save();
-//     order = await order
-//       .populate("user")
-//       .populate({ path: "orderItems", populate: { path: "productId" } })
-//       .execPopulate();
-
-//     res.status(200).json({ messsage: "Order Paid", order });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Something went wrong");
-//   }
-// };
-
-module.exports = { getAllOrders, createOrders, deleteOrder };
+module.exports = { getAllOrders, deleteOrder };
