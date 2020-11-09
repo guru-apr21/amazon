@@ -174,7 +174,7 @@ const changePassword = async (req, res, next) => {
 const uploadAvatar = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
-    if (user) {
+    if (!user) {
       return res.status(404).json({ error: 'No user with the given id' });
     }
     user.avatar = await uploadToS3(req.file, 'userAvatars');
