@@ -10,12 +10,7 @@ const authenticateJwt = async (req, res, next) => {
       res.locals.loggedInUser = await User.findById(userId);
       next();
     } catch (err) {
-      if (err.name === 'TokenExpiredError') {
-        return res
-          .status(400)
-          .json({ error: 'Token expired login to continue' });
-      }
-      next();
+      next(err);
     }
   } else {
     next();

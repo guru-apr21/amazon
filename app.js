@@ -12,8 +12,8 @@ const reviews = require('./routes/review');
 const address = require('./routes/address');
 const stripe = require('./routes/payment');
 const swagger = require('./swagger');
-const errorHandler = require('./middleware/error');
 const { authenticateJwt } = require('./middleware/auth');
+const errorHandler = require('./middleware/error');
 
 mongoose
   .connect(MONGO_URL, {

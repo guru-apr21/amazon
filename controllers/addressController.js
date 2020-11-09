@@ -1,4 +1,4 @@
-const Address = require('../models/Address');
+const { Address, validateAddress } = require('../models/Address');
 
 /**
  *
@@ -36,8 +36,12 @@ const getUserAddresses = async (req, res, next) => {
 
 const createNewAddress = async (req, res, next) => {
   try {
-    const { city, country, line1 } = req.body;
-    const { line2, postalCode, state } = req.body;
+    const { error } = validateAddress(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { city, country, line1, line2, postalCode, state } = req.body;
     let address = new Address({
       user: req.user._id,
       city,
@@ -50,6 +54,20 @@ const createNewAddress = async (req, res, next) => {
 
     address = await address.save();
     return res.status(201).json(address);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateAddress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let address = await Address.findOne({ _id: id, user: req.user._id });
+    if (!address) {
+      return res.status(404).json({ error: 'No address with the given id' });
+    }
+    address = await Address.findByIdAndUpdate(id, req.body, { new: true });
+    res.json({ data: address, message: 'Address updated successfully!' });
   } catch (error) {
     next(error);
   }
@@ -80,4 +98,9 @@ const deleteAddressById = async (req, res, next) => {
   }
 };
 
-module.exports = { getUserAddresses, createNewAddress, deleteAddressById };
+module.exports = {
+  getUserAddresses,
+  createNewAddress,
+  deleteAddressById,
+  updateAddress,
+};

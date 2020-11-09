@@ -8,6 +8,9 @@ router.get('/', allowIfLoggedIn, addressController.getUserAddresses);
 // Create new Address
 router.post('/', allowIfLoggedIn, addressController.createNewAddress);
 
+// Update existing address
+router.put('/:id', allowIfLoggedIn, addressController.updateAddress);
+
 // Delete address by id
 router.delete('/', allowIfLoggedIn, addressController.deleteAddressById);
 
