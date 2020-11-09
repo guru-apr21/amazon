@@ -25,4 +25,5 @@ router.post('/avatar', allowIfLoggedIn, upload, userController.uploadAvatar);
 
 // Delete user's existing avatar from s3 and also from db
 router.delete('/avatar', allowIfLoggedIn, userController.deleteAvatar);
+
 module.exports = router;
