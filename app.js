@@ -12,6 +12,7 @@ const reviews = require('./routes/review');
 const address = require('./routes/address');
 const stripe = require('./routes/payment');
 const swagger = require('./swagger');
+const cors = require('cors');
 const { authenticateJwt } = require('./middleware/auth');
 const errorHandler = require('./middleware/error');
 
@@ -29,6 +30,7 @@ mongoose
     console.log('Error connecting to the database', err);
   });
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
