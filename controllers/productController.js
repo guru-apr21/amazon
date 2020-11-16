@@ -110,7 +110,7 @@ const updateProduct = async (req, res, next) => {
         return res.status(401).json({ error: 'Access Denied' });
       }
     }
-    product = await Product.findByIdAndDelete(id, updateObj, { new: true });
+    product = await Product.findByIdAndUpdate(id, updateObj, { new: true });
     res.json(product);
   } catch (error) {
     next(error);

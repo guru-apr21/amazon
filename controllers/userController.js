@@ -119,16 +119,17 @@ const loginUser = async (req, res, next) => {
     }
 
     const { email, password } = req.body;
-
-    const user = await findUserByEmailId(email);
+    let user = await findUserByEmailId(email);
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
     const match = await comparePassword(password, user.passwordHash);
     if (!match) return res.status(400).json({ error: 'Invalid credentials' });
 
     const accessToken = user.genAuthToken();
-    await User.findByIdAndUpdate(user._id, { accessToken });
-    res.json({ data: { email: user.email, role: user.role }, accessToken });
+    user = await User.findById(user._id);
+    user.accessToken = accessToken;
+    user = await user.save();
+    res.json({ user, accessToken });
   } catch (error) {
     next(error);
   }
