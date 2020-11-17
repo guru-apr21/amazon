@@ -24,7 +24,7 @@ const getParams = (folderName, file) => ({
   ACL: 'public-read',
   Bucket: BUCKET_NAME,
   Body: fs.createReadStream(file.path),
-  Key: `${folderName}/${uuidv1()}.JPG`,
+  Key: `${folderName}/https://${uuidv1()}.JPG`,
 });
 
 const upload = (params, cb) => S3.upload(params, cb);

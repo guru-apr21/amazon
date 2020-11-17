@@ -1,4 +1,5 @@
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 
 const findCartByUserId = async (id) => {
   const cart = await Cart.findOne({ userId: id }).populate('userId');
@@ -19,9 +20,13 @@ const findCartByUserId = async (id) => {
 const getCartItems = async (req, res, next) => {
   try {
     const cart = await findCartByUserId(req.user._id);
-    if (!cart || cart.products.length < 1) return res.status(204).end();
-    return res.json(cart);
+    await cart
+      .populate({ path: 'products', populate: { path: 'productId' } })
+      .execPopulate();
+    if (!cart || cart.products.length < 1) return res.json([]);
+    return res.json(cart.products);
   } catch (err) {
+    console.log(err);
     next(err);
   }
 };
@@ -31,8 +36,6 @@ const getCartItems = async (req, res, next) => {
  * @param {ObjectId} req.user._id
  * @param {ObjectId} req.body.productId
  * @param {Number} req.body.quantity
- * @param {String} req.body.title
- * @param {Number} req.body.price
  *
  * @param {*} res
  * @returns status 404 if user not found
@@ -45,7 +48,12 @@ const getCartItems = async (req, res, next) => {
 const createCart = async (req, res, next) => {
   try {
     const { _id: userId } = req.user;
-    const { productId, quantity, title, price } = req.body;
+    const { productId, quantity = 1 } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(400).json({ error: 'No product with the given id!' });
+    }
 
     let cart = await Cart.findOne({ userId }).populate('userId');
 
@@ -65,22 +73,27 @@ const createCart = async (req, res, next) => {
       if (itemIndex > -1) {
         cart.products[itemIndex].quantity = quantity;
       } else {
-        cart.products.push({ productId, quantity, title, price });
+        cart.products.push({ productId, quantity });
       }
       cart = await cart.save();
-
-      res.json(cart);
+      await cart
+        .populate({ path: 'products', populate: { path: 'productId' } })
+        .execPopulate();
+      res.json(cart.products);
     } else {
       /**
        * Create new cart if the user has no cart
        */
+
       cart = new Cart({
         userId,
-        products: [{ productId, quantity, title, price }],
+        products: [{ productId, quantity }],
       });
       cart = await cart.save();
-      cart.populate('userId').execPopulate();
-      res.status(201).json(cart);
+      await cart
+        .populate({ path: 'products', populate: { path: 'productId' } })
+        .execPopulate();
+      res.status(201).json(cart.products);
     }
   } catch (err) {
     next(err);
@@ -110,8 +123,10 @@ const removeProdFromCart = async (req, res, next) => {
       (p) => String(p.productId) !== productId
     );
     cart = await cart.save();
-
-    res.json(cart);
+    await cart
+      .populate({ path: 'products', populate: { path: 'productId' } })
+      .execPopulate();
+    res.json(cart.products);
   } catch (err) {
     next(err);
   }
