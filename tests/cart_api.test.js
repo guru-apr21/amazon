@@ -5,7 +5,7 @@ const app = require('../app');
 const api = supertest(app);
 const User = require('../models/User');
 const Category = require('../models/Category');
-const Product = require('../models/Product');
+const { Product } = require('../models/Product');
 const Cart = require('../models/Cart');
 
 const user = {

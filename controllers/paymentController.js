@@ -1,5 +1,5 @@
 const Order = require('../models/Order');
-const Product = require('../models/Product');
+const { Product } = require('../models/Product');
 const { stripe } = require('../utils/config');
 
 /**
@@ -18,46 +18,47 @@ const { stripe } = require('../utils/config');
 const createPaymentIntent = async (req, res, next) => {
   try {
     const customer = req.user.stripeCustomerId;
-    const { orderItems } = req.body;
+    const { amount } = req.body;
 
-    const productIds = orderItems.map((p) => p.productId);
-    const products = await Product.find()
-      .where('_id')
-      .in(productIds)
-      .select('price')
-      .exec();
+    // const productIds = orderItems.map((p) => p.productId);
+    // const products = await Product.find()
+    //   .where('_id')
+    //   .in(productIds)
+    //   .select('price')
+    //   .exec();
 
-    let amount = 0;
+    // let amount = 0;
 
-    for (let i = 0; i < products.length; i += 1) {
-      if (productIds[i] === String(products[i]._id)) {
-        amount += orderItems[i].quantity * products[i].price;
-      }
-    }
+    // for (let i = 0; i < products.length; i += 1) {
+    //   if (productIds[i] === String(products[i]._id)) {
+    //     amount += orderItems[i].quantity * products[i].price;
+    //   }
+    // }
 
     // Create new payment intent
+
     const intent = await stripe.paymentIntents.create({
       amount,
       currency: 'inr',
       confirmation_method: 'manual',
-      description: 'Software development services',
       setup_future_usage: 'off_session',
       customer,
     });
 
     // Create new order document and save it to DB with isPaid set to false
-    let order = new Order({
-      orderItems,
-      user: req.user._id,
-      totalPrice: amount,
-      stripePaymentIntentId: intent.id,
-    });
-    order = await order.save();
+    // let order = new Order({
+    //   orderItems,
+    //   user: req.user._id,
+    //   totalPrice: amount,
+    //   stripePaymentIntentId: intent.id,
+    // });
+    // order = await order.save();
 
     if (intent.status === 'requires_payment_method') {
       return res.json({
         payment_intent_id: intent.id,
-        order,
+        client_secret: intent.client_secret,
+        // order,
         message: 'Requires payment method',
       });
     }
@@ -113,6 +114,28 @@ const confirmPaymentIntent = async (req, res, next) => {
   }
 };
 
+const confirmPayment = async (req, res, next) => {
+  try {
+    const { paymentMethod, paymentIntentId } = req.body;
+    const intent = await stripe.paymentIntents.confirm(paymentIntentId, {
+      payment_method: paymentMethod,
+    });
+    if (intent.status === 'succeeded') {
+      console.log('i am here');
+      return res.send('success');
+    }
+    if (intent.status === 'requires_action') {
+      return res.json({
+        payment_intent_id: intent.id,
+        message: 'Requires action',
+      });
+    }
+  } catch (err) {
+    next(err);
+    console.log(err);
+  }
+};
+
 /**
  *
  * @param {*} req.body.cardDetails
@@ -164,4 +187,5 @@ module.exports = {
   confirmPaymentIntent,
   createNewPaymentMethod,
   getAllCardPaymentMethods,
+  confirmPayment,
 };

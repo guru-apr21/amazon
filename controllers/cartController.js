@@ -1,5 +1,5 @@
 const Cart = require('../models/Cart');
-const Product = require('../models/Product');
+const { Product } = require('../models/Product');
 
 const findCartByUserId = async (id) => {
   const cart = await Cart.findOne({ userId: id }).populate('userId');
@@ -48,7 +48,7 @@ const getCartItems = async (req, res, next) => {
 const createCart = async (req, res, next) => {
   try {
     const { _id: userId } = req.user;
-    const { productId, quantity = 1 } = req.body;
+    const { productId, quantity } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -151,7 +151,7 @@ const emptyCart = async (req, res, next) => {
 
     cart.products = [];
     await cart.save();
-    res.status(204).end();
+    res.json(cart.products);
   } catch (err) {
     next(err);
   }

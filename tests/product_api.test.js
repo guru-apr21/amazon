@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../app');
 const Category = require('../models/Category');
-const Product = require('../models/Product');
+const { Product } = require('../models/Product');
 const api = supertest(app);
 
 const user = {

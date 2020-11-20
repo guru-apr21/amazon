@@ -12,7 +12,7 @@ const user = {
 };
 
 const Category = require('../models/Category');
-const User = require('../models/User');
+const { User } = require('../models/User');
 
 let token;
 beforeAll(async () => {

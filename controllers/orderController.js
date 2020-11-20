@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const { User } = require('../models/User');
 
 /**
  *
@@ -39,4 +40,36 @@ const deleteOrder = async (req, res, next) => {
   }
 };
 
-module.exports = { getAllOrders, deleteOrder };
+const createNewOrder = async (req, res, next) => {
+  try {
+    const { orderItems, paymentIntentId, totalPrice } = req.body;
+    const order = new Order({
+      orderItems,
+      user: req.user._id,
+      paidAt: Date.now(),
+      status: 'placed',
+      isPaid: true,
+      totalPrice,
+      stripePaymentIntentId: paymentIntentId,
+    });
+    await order.save();
+    res.json({ order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserOrders = async (req, res, next) => {
+  try {
+    let user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(400).json({ error: 'No user with the given id.' });
+    }
+    let orders = await Order.find({ user: req.user._id });
+    res.json({ orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getAllOrders, deleteOrder, createNewOrder, getUserOrders };

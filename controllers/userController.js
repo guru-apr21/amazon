@@ -94,7 +94,7 @@ const createUser = async (req, res, next) => {
     const accessToken = newUser.genAuthToken();
     newUser.accessToken = accessToken;
     await newUser.save();
-    res.json({ data: newUser, accessToken });
+    res.json({ user: newUser, accessToken });
   } catch (error) {
     next(error);
   }

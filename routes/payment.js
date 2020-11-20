@@ -26,4 +26,10 @@ router.post(
 // Confirm a payment intent by adding payment method
 router.post('/pay', allowIfLoggedIn, paymentController.confirmPaymentIntent);
 
+router.post(
+  '/confirm-payment',
+  allowIfLoggedIn,
+  paymentController.confirmPayment
+);
+
 module.exports = router;

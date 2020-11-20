@@ -1,4 +1,5 @@
 module.exports = (err, req, res, next) => {
+  console.log(err);
   switch (err.name || err.type || err.status) {
     case 'ValidationError':
       res.status(400).json({ error: err.message });

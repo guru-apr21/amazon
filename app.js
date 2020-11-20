@@ -30,7 +30,7 @@ mongoose
     console.log('Error connecting to the database', err);
   });
 
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

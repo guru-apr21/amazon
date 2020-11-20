@@ -21,4 +21,4 @@ productSchema.set('toJSON', {
 productSchema.index({ title: 'text', description: 'text' });
 
 const Product = mongoose.model('Product', productSchema);
-module.exports = Product;
+module.exports = { Product, productSchema };

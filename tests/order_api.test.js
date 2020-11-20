@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../app');
 const api = supertest(app);
-const User = require('../models/User');
+const { User } = require('../models/User');
 const Category = require('../models/Category');
-const Product = require('../models/Product');
+const { Product } = require('../models/Product');
 const Order = require('../models/Order');
-const Address = require('../models/Address');
+const { Address } = require('../models/Address');
 
 const user = {
   firstName: 'Lokesh',
