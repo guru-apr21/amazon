@@ -20,6 +20,9 @@ const findCartByUserId = async (id) => {
 const getCartItems = async (req, res, next) => {
   try {
     const cart = await findCartByUserId(req.user._id);
+    if (!cart) {
+      return res.json([]);
+    }
     await cart
       .populate({ path: 'products', populate: { path: 'productId' } })
       .execPopulate();
