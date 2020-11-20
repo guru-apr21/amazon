@@ -23,6 +23,13 @@ router.put('/:id', allowIfLoggedIn, seller, productController.updateProduct);
 // Delete a product and respond with the deleted product
 router.delete('/:id', allowIfLoggedIn, seller, productController.deleteProduct);
 
+router.get(
+  '/user/:id',
+  allowIfLoggedIn,
+  seller,
+  productController.getUserProducts
+);
+
 router.post(
   '/:id/upload-images',
   allowIfLoggedIn,

@@ -185,6 +185,16 @@ const uploadProductImages = async (req, res, next) => {
   }
 };
 
+const getUserProducts = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const products = await Product.find({ user: id });
+    res.json(products);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProduct,
   getProducts,
@@ -192,4 +202,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   uploadProductImages,
+  getUserProducts,
 };
