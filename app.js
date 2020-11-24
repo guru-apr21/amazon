@@ -15,6 +15,7 @@ const swagger = require('./swagger');
 const cors = require('cors');
 const { authenticateJwt } = require('./middleware/auth');
 const errorHandler = require('./middleware/error');
+const morgan = require('morgan');
 
 mongoose
   .connect(MONGO_URL, {
@@ -33,6 +34,7 @@ mongoose
 app.use(cors({ origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
 app.use(authenticateJwt);
 
