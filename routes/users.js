@@ -26,4 +26,10 @@ router.post('/avatar', allowIfLoggedIn, upload, userController.uploadAvatar);
 // Delete user's existing avatar from s3 and also from db
 router.delete('/avatar', allowIfLoggedIn, userController.deleteAvatar);
 
+//Change role from buyer to seller
+router.put('/role', allowIfLoggedIn, userController.changeRole);
+
+//Route for email validation
+router.post('/email', userController.validateEmail);
+
 module.exports = router;

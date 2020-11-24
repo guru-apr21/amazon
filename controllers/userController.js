@@ -120,10 +120,10 @@ const loginUser = async (req, res, next) => {
 
     const { email, password } = req.body;
     let user = await findUserByEmailId(email);
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
-
     const match = await comparePassword(password, user.passwordHash);
-    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user || !match) {
+      return res.status(401).json({ message: 'Invalid credentials!' });
+    }
 
     const accessToken = user.genAuthToken();
     user = await User.findById(user._id);
@@ -207,6 +207,38 @@ const deleteAvatar = async (req, res, next) => {
   }
 };
 
+const changeRole = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'No user with the given id' });
+    }
+    if (user.role === 'seller') {
+      return res.status(400).json({ error: 'User is already a seller' });
+    }
+    user.role = 'seller';
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const validateEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      return res
+        .status(422)
+        .json({ message: 'User already exists!', status: 422 });
+    }
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findUserByEmailId,
   createUser,
@@ -216,4 +248,6 @@ module.exports = {
   changePassword,
   uploadAvatar,
   deleteAvatar,
+  changeRole,
+  validateEmail,
 };
