@@ -14,7 +14,7 @@ router.post("/", authenticateJwt, orderController.createOrders);
 //Delete an existing order and respond with the deleted order
 router.delete("/:id", authenticateJwt, roleAuth, orderController.deleteOrder);
 
-//Makes payment for an existing order and respond with the order details
-router.put("/:id/pay", authenticateJwt, orderController.payForOrder);
+//make payment using stripe api
+router.post("/payment", authenticateJwt, orderController.pay);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 module.exports = (err, req, res, next) => {
-  switch (err.status || err.name) {
+  console.log(err);
+  switch (err.status || err.statusCode || err.name) {
     case 200:
       res.status(200).json(err.message);
       break;
@@ -9,6 +10,9 @@ module.exports = (err, req, res, next) => {
       break;
     case 404:
       res.status(404).json(err.message);
+      break;
+    case 402:
+      res.status(402).json(err.message);
       break;
     case "CastError":
       res.status(400).json(err.message);
